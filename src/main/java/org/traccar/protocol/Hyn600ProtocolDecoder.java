@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Anton Tananaev (anton@traccar.org)
+ * Copyright 2025 - 2026 Anton Tananaev (anton@traccar.org)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,11 @@
 package org.traccar.protocol;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.Channel;
 import org.traccar.BaseProtocolDecoder;
 import org.traccar.Protocol;
-import org.traccar.helper.BcdUtil;
 import org.traccar.helper.BitUtil;
+import org.traccar.helper.BufferUtil;
 import org.traccar.helper.DateBuilder;
 import org.traccar.helper.UnitsConverter;
 import org.traccar.model.CellTower;
@@ -58,7 +57,7 @@ public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
         }
 
         if (BitUtil.check(mask, 2)) {
-            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() / 100.0);
+            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() / 1000.0);
             position.set(Position.KEY_BATTERY_LEVEL, buf.readUnsignedByte());
         }
 
@@ -132,7 +131,7 @@ public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
         if (BitUtil.check(mask, 8)) {
             long eventMask = buf.readUnsignedInt();
             if (BitUtil.check(eventMask, 0)) {
-                position.set(Position.KEY_POWER, buf.readUnsignedShort() / 1000.0);
+                position.set(Position.KEY_POWER, buf.readUnsignedShort() / 100.0);
             }
             if (BitUtil.check(eventMask, 1)) {
                 int adcIndex = buf.readUnsignedByte();
@@ -239,12 +238,12 @@ public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
         }
 
         DateBuilder dateBuilder = new DateBuilder()
-                .setYear(BcdUtil.readInteger(buf, 4))
-                .setMonth(BcdUtil.readInteger(buf, 2))
-                .setDay(BcdUtil.readInteger(buf, 2))
-                .setHour(BcdUtil.readInteger(buf, 2))
-                .setMinute(BcdUtil.readInteger(buf, 2))
-                .setSecond(BcdUtil.readInteger(buf, 2));
+                .setYear(buf.readUnsignedShort())
+                .setMonth(buf.readUnsignedByte())
+                .setDay(buf.readUnsignedByte())
+                .setHour(buf.readUnsignedByte())
+                .setMinute(buf.readUnsignedByte())
+                .setSecond(buf.readUnsignedByte());
         position.setDeviceTime(dateBuilder.getDate());
 
         buf.readUnsignedShort(); // index
@@ -262,7 +261,7 @@ public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
         String header = buf.readCharSequence(5, StandardCharsets.UTF_8).toString();
         buf.readUnsignedShort(); // length
 
-        String imei = ByteBufUtil.hexDump(buf.readSlice(8)).substring(1);
+        String imei = BufferUtil.readDecimalDigits(buf, 7) + buf.readUnsignedByte();
         DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, imei);
         if (deviceSession == null) {
             return null;
