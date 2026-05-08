@@ -62,7 +62,7 @@ public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
             batteryLevel = buf.readUnsignedByte();
         }
 
-        List<Position> positions = new LinkedList<>();
+        LinkedList<Position> positions = new LinkedList<>();
 
         if (BitUtil.check(mask, 3)) {
             int locationMask = buf.readUnsignedShort();
