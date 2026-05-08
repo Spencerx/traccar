@@ -30,6 +30,8 @@ import org.traccar.session.DeviceSession;
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
 
@@ -37,10 +39,7 @@ public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
         super(protocol);
     }
 
-    private Position decodeReport(DeviceSession deviceSession, ByteBuf buf) {
-
-        Position position = new Position(getProtocolName());
-        position.setDeviceId(deviceSession.getDeviceId());
+    private List<Position> decodeReport(DeviceSession deviceSession, ByteBuf buf) {
 
         buf.readUnsignedShort(); // protocol version
         buf.readUnsignedByte(); // event type
@@ -56,62 +55,83 @@ public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
             buf.readUnsignedByte(); // network type
         }
 
+        double battery = 0;
+        short batteryLevel = 0;
         if (BitUtil.check(mask, 2)) {
-            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() / 1000.0);
-            position.set(Position.KEY_BATTERY_LEVEL, buf.readUnsignedByte());
+            battery = buf.readUnsignedShort() / 1000.0;
+            batteryLevel = buf.readUnsignedByte();
         }
+
+        List<Position> positions = new LinkedList<>();
 
         if (BitUtil.check(mask, 3)) {
             int locationMask = buf.readUnsignedShort();
-            buf.readUnsignedByte(); // count
-            if (BitUtil.check(locationMask, 0)) {
-                position.setValid(buf.readUnsignedByte() > 0);
-            }
-            if (BitUtil.check(locationMask, 1)) {
-                position.set(Position.KEY_HDOP, buf.readUnsignedByte());
-            }
-            if (BitUtil.check(locationMask, 2)) {
-                position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedShort()));
-            }
-            if (BitUtil.check(locationMask, 3)) {
-                position.setCourse(buf.readUnsignedShort());
-            }
-            if (BitUtil.check(locationMask, 4)) {
-                position.setAltitude(buf.readShort());
-            }
-            if (BitUtil.check(locationMask, 5)) {
-                position.setLatitude(buf.readInt() / 1000000.0);
-            }
-            if (BitUtil.check(locationMask, 6)) {
-                position.setLongitude(buf.readInt() / 1000000.0);
-            }
-            if (BitUtil.check(locationMask, 7)) {
-                DateBuilder dateBuilder = new DateBuilder()
-                        .setYear(buf.readUnsignedShort())
-                        .setMonth(buf.readUnsignedByte())
-                        .setDay(buf.readUnsignedByte())
-                        .setHour(buf.readUnsignedByte())
-                        .setMinute(buf.readUnsignedByte())
-                        .setSecond(buf.readUnsignedByte());
-                position.setFixTime(dateBuilder.getDate());
-            }
-            if (BitUtil.check(locationMask, 8)) {
-                int satelliteMask = buf.readUnsignedByte();
-                if (BitUtil.check(satelliteMask, 0)) {
-                    buf.readUnsignedByte(); // GPS
+            int count = buf.readUnsignedByte();
+            for (int i = 0; i < count; i++) {
+                Position position = new Position(getProtocolName());
+                position.setDeviceId(deviceSession.getDeviceId());
+                if (BitUtil.check(locationMask, 0)) {
+                    position.setValid(buf.readUnsignedByte() > 0);
                 }
-                if (BitUtil.check(satelliteMask, 1)) {
-                    buf.readUnsignedByte(); // BEIDOU
+                if (BitUtil.check(locationMask, 1)) {
+                    position.set(Position.KEY_HDOP, buf.readUnsignedByte());
                 }
-                if (BitUtil.check(satelliteMask, 2)) {
-                    buf.readUnsignedByte(); // GALILEO
+                if (BitUtil.check(locationMask, 2)) {
+                    position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedShort()));
                 }
-                if (BitUtil.check(satelliteMask, 3)) {
-                    buf.readUnsignedByte(); // GLONASS
+                if (BitUtil.check(locationMask, 3)) {
+                    position.setCourse(buf.readUnsignedShort());
                 }
+                if (BitUtil.check(locationMask, 4)) {
+                    position.setAltitude(buf.readShort());
+                }
+                if (BitUtil.check(locationMask, 5)) {
+                    position.setLatitude(buf.readInt() / 1000000.0);
+                }
+                if (BitUtil.check(locationMask, 6)) {
+                    position.setLongitude(buf.readInt() / 1000000.0);
+                }
+                if (BitUtil.check(locationMask, 7)) {
+                    DateBuilder dateBuilder = new DateBuilder()
+                            .setYear(buf.readUnsignedShort())
+                            .setMonth(buf.readUnsignedByte())
+                            .setDay(buf.readUnsignedByte())
+                            .setHour(buf.readUnsignedByte())
+                            .setMinute(buf.readUnsignedByte())
+                            .setSecond(buf.readUnsignedByte());
+                    position.setFixTime(dateBuilder.getDate());
+                }
+                if (BitUtil.check(locationMask, 8)) {
+                    int satelliteMask = buf.readUnsignedByte();
+                    if (BitUtil.check(satelliteMask, 0)) {
+                        buf.readUnsignedByte(); // GPS
+                    }
+                    if (BitUtil.check(satelliteMask, 1)) {
+                        buf.readUnsignedByte(); // BEIDOU
+                    }
+                    if (BitUtil.check(satelliteMask, 2)) {
+                        buf.readUnsignedByte(); // GALILEO
+                    }
+                    if (BitUtil.check(satelliteMask, 3)) {
+                        buf.readUnsignedByte(); // GLONASS
+                    }
+                }
+                positions.add(position);
             }
-        } else {
+        }
+
+        if (positions.isEmpty()) {
+            Position position = new Position(getProtocolName());
+            position.setDeviceId(deviceSession.getDeviceId());
             getLastLocation(position, null);
+            positions.add(position);
+        }
+
+        Position position = positions.getLast();
+
+        if (BitUtil.check(mask, 2)) {
+            position.set(Position.KEY_BATTERY, battery);
+            position.set(Position.KEY_BATTERY_LEVEL, batteryLevel);
         }
 
         if (BitUtil.check(mask, 4)) {
@@ -174,8 +194,8 @@ public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
                 buf.skipBytes(buf.readUnsignedByte()); // id data
             }
             if (BitUtil.check(eventMask, 9)) {
-                int count = buf.readUnsignedByte();
-                for (int i = 0; i < count; i++) {
+                int sensorCount = buf.readUnsignedByte();
+                for (int i = 0; i < sensorCount; i++) {
                     buf.skipBytes(8); // sensor id
                     int dataMask = buf.readUnsignedByte();
                     if (BitUtil.check(dataMask, 0)) {
@@ -249,7 +269,7 @@ public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
         buf.readUnsignedShort(); // index
         buf.readUnsignedByte(); // tail
 
-        return position;
+        return positions;
     }
 
     @Override
