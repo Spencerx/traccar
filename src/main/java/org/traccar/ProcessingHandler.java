@@ -36,6 +36,7 @@ import org.traccar.handler.GeocoderHandler;
 import org.traccar.handler.GeofenceHandler;
 import org.traccar.handler.GeolocationHandler;
 import org.traccar.handler.HemisphereHandler;
+import org.traccar.handler.MapMatcherHandler;
 import org.traccar.handler.MotionHandler;
 import org.traccar.handler.OutdatedHandler;
 import org.traccar.handler.PositionForwardingHandler;
@@ -101,6 +102,7 @@ public class ProcessingHandler extends ChannelInboundHandlerAdapter implements B
                 TimeHandler.class,
                 GeolocationHandler.class,
                 HemisphereHandler.class,
+                MapMatcherHandler.class,
                 DistanceHandler.class,
                 FilterHandler.class,
                 GeofenceHandler.class,

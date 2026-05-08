@@ -1866,6 +1866,36 @@ public final class Keys {
             true);
 
     /**
+     * Boolean flag to enable map matcher. When enabled, position coordinates are aligned to the nearest road segment
+     * before further processing.
+     */
+    public static final ConfigKey<Boolean> MAP_MATCHER_ENABLE = new BooleanConfigKey(
+            "mapMatcher.enable",
+            List.of(KeyType.CONFIG));
+
+    /**
+     * Map matcher provider type. Currently only "traccar" is supported.
+     */
+    public static final ConfigKey<String> MAP_MATCHER_TYPE = new StringConfigKey(
+            "mapMatcher.type",
+            List.of(KeyType.CONFIG),
+            "traccar");
+
+    /**
+     * Map matcher service URL.
+     */
+    public static final ConfigKey<String> MAP_MATCHER_URL = new StringConfigKey(
+            "mapMatcher.url",
+            List.of(KeyType.CONFIG));
+
+    /**
+     * Map matcher provider API key.
+     */
+    public static final ConfigKey<String> MAP_MATCHER_KEY = new StringConfigKey(
+            "mapMatcher.key",
+            List.of(KeyType.CONFIG));
+
+    /**
      * Boolean flag to enable LBS location resolution. Some devices send cell tower information and Wi-Fi points when
      * GPS location is not available. Traccar can determine coordinates based on that information using third-party
      * services. Default value is false.
