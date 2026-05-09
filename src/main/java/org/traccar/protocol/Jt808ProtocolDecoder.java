@@ -92,7 +92,7 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
         return protocolVersion;
     }
 
-    public ByteBuf formatMessage(int delimiter, int type, ByteBuf id, boolean shortIndex, ByteBuf data) {
+    public ByteBuf formatMessage(int type, ByteBuf id, boolean shortIndex, ByteBuf data) {
         ByteBuf buf = Unpooled.buffer();
         buf.writeByte(delimiter);
         buf.writeShort(type);
@@ -125,7 +125,7 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
             response.writeShort(type);
             response.writeByte(RESULT_SUCCESS);
             channel.writeAndFlush(new NetworkMessage(
-                    formatMessage(delimiter, MSG_GENERAL_RESPONSE, id, false, response), remoteAddress));
+                    formatMessage(MSG_GENERAL_RESPONSE, id, false, response), remoteAddress));
         }
     }
 
@@ -136,7 +136,7 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
             response.writeShort(type);
             response.writeByte(RESULT_SUCCESS);
             channel.writeAndFlush(new NetworkMessage(
-                    formatMessage(delimiter, MSG_GENERAL_RESPONSE_2, id, true, response), remoteAddress));
+                    formatMessage(MSG_GENERAL_RESPONSE_2, id, true, response), remoteAddress));
         }
     }
 
@@ -228,7 +228,11 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
         }
     }
 
-    static ByteBuf encodeId(String uniqueId) {
+    static ByteBuf encodeId(String uniqueId, int length) {
+        if (length == 10) {
+            return Unpooled.wrappedBuffer(DataConverter.parseHex(
+                    String.format("%20s", uniqueId).replace(' ', '0')));
+        }
         if (uniqueId.length() % 2 == 0) {
             return Unpooled.wrappedBuffer(DataConverter.parseHex(uniqueId));
         } else {
@@ -335,7 +339,7 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
                 response.writeByte(RESULT_SUCCESS);
                 response.writeBytes(decodeId(id).getBytes(StandardCharsets.US_ASCII));
                 channel.writeAndFlush(new NetworkMessage(
-                        formatMessage(delimiter, MSG_TERMINAL_REGISTER_RESPONSE, id, false, response), remoteAddress));
+                        formatMessage(MSG_TERMINAL_REGISTER_RESPONSE, id, false, response), remoteAddress));
             }
 
         } else if (type == MSG_REPORT_TEXT_MESSAGE) {
@@ -408,7 +412,7 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
                 response.writeByte(calendar.get(Calendar.MINUTE));
                 response.writeByte(calendar.get(Calendar.SECOND));
                 channel.writeAndFlush(new NetworkMessage(
-                        formatMessage(delimiter, MSG_TERMINAL_REGISTER_RESPONSE, id, false, response), remoteAddress));
+                        formatMessage(MSG_TERMINAL_REGISTER_RESPONSE, id, false, response), remoteAddress));
             }
 
         } else if (type == MSG_ACCELERATION) {
