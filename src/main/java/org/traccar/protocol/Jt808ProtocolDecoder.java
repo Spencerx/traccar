@@ -86,16 +86,24 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
     public static final int RESULT_SUCCESS = 0;
 
     private int delimiter = 0x7e;
+    private Integer protocolVersion;
 
-    public boolean isAlternative() {
-        return delimiter == 0xe7;
+    public Integer getProtocolVersion() {
+        return protocolVersion;
     }
 
-    public static ByteBuf formatMessage(int delimiter, int type, ByteBuf id, boolean shortIndex, ByteBuf data) {
+    public ByteBuf formatMessage(int delimiter, int type, ByteBuf id, boolean shortIndex, ByteBuf data) {
         ByteBuf buf = Unpooled.buffer();
         buf.writeByte(delimiter);
         buf.writeShort(type);
-        buf.writeShort(data.readableBytes());
+        int attribute = data.readableBytes();
+        if (protocolVersion != null) {
+            attribute |= 0x4000;
+        }
+        buf.writeShort(attribute);
+        if (protocolVersion != null) {
+            buf.writeByte(protocolVersion);
+        }
         buf.writeBytes(id);
         if (shortIndex) {
             buf.writeByte(1);
@@ -212,7 +220,7 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
     static String decodeId(ByteBuf id) {
         String serial = ByteBufUtil.hexDump(id);
         if (serial.matches("[0-9]+")) {
-            return serial;
+            return id.readableBytes() == 10 ? serial.replaceFirst("^0+", "") : serial;
         } else {
             long imei = id.getUnsignedShort(0);
             imei = (imei << 32) + id.getUnsignedInt(2);
@@ -299,7 +307,10 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
         delimiter = buf.readUnsignedByte();
         int type = buf.readUnsignedShort();
         int attribute = buf.readUnsignedShort();
-        ByteBuf id = buf.readSlice(isAlternative() ? 7 : 6);
+
+        protocolVersion = BitUtil.check(attribute, 14) ? (int) buf.readUnsignedByte() : null;
+        ByteBuf id = buf.readSlice(protocolVersion != null ? 10 : (delimiter == 0xe7 ? 7 : 6));
+
         int index;
         if (type == MSG_LOCATION_REPORT_2 || type == MSG_LOCATION_REPORT_BLIND) {
             index = buf.readUnsignedByte();
