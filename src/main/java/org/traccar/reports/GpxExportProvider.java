@@ -19,6 +19,7 @@ import org.traccar.helper.DateUtil;
 import org.traccar.helper.model.PositionUtil;
 import org.traccar.model.Device;
 import org.traccar.model.Geofence;
+import org.traccar.model.Position;
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
 import org.traccar.storage.query.Columns;
@@ -27,7 +28,6 @@ import org.traccar.storage.query.Request;
 
 import jakarta.inject.Inject;
 import java.io.OutputStream;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.stream.Stream;
@@ -50,7 +50,6 @@ public class GpxExportProvider {
 
         var device = storage.getObject(Device.class, new Request(
                 new Columns.All(), new Condition.Equals("id", deviceId)));
-        var positions = PositionUtil.getPositions(storage, deviceId, from, to);
 
         Geofence geofence = geofenceId == 0 ? null : storage.getObject(Geofence.class, new Request(
                 new Columns.All(), new Condition.Equals("id", geofenceId)));
@@ -66,20 +65,21 @@ public class GpxExportProvider {
         writer.writeCharacters(device.getName());
         writer.writeEndElement();
         writer.writeStartElement("trkseg");
-        for (var position : positions) {
-            if (geofence != null && !geofence.containsPosition(position)) {
-                continue;
+        try (Stream<Position> positions = PositionUtil.getPositionsStream(storage, deviceId, from, to)
+                .filter(position -> geofence == null || geofence.containsPosition(position))) {
+            for (var iterator = positions.iterator(); iterator.hasNext();) {
+                Position position = iterator.next();
+                writer.writeStartElement("trkpt");
+                writer.writeAttribute("lat", Double.toString(position.getLatitude()));
+                writer.writeAttribute("lon", Double.toString(position.getLongitude()));
+                writer.writeStartElement("ele");
+                writer.writeCharacters(Double.toString(position.getAltitude()));
+                writer.writeEndElement();
+                writer.writeStartElement("time");
+                writer.writeCharacters(DateUtil.formatDate(position.getFixTime()));
+                writer.writeEndElement();
+                writer.writeEndElement();
             }
-            writer.writeStartElement("trkpt");
-            writer.writeAttribute("lat", Double.toString(position.getLatitude()));
-            writer.writeAttribute("lon", Double.toString(position.getLongitude()));
-            writer.writeStartElement("ele");
-            writer.writeCharacters(Double.toString(position.getAltitude()));
-            writer.writeEndElement();
-            writer.writeStartElement("time");
-            writer.writeCharacters(DateUtil.formatDate(position.getFixTime()));
-            writer.writeEndElement();
-            writer.writeEndElement();
         }
         writer.writeEndElement();
         writer.writeEndElement();
