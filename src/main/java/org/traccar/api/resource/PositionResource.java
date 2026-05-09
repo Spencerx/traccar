@@ -132,12 +132,12 @@ public class PositionResource extends BaseResource {
     @GET
     @Produces("application/vnd.google-earth.kml+xml")
     public Response getKml(
-            @QueryParam("deviceId") long deviceId,
+            @QueryParam("deviceId") long deviceId, @QueryParam("geofenceId") long geofenceId,
             @QueryParam("from") Date from, @QueryParam("to") Date to) throws StorageException {
         permissionsService.checkPermission(Device.class, getUserId(), deviceId);
         StreamingOutput stream = output -> {
             try {
-                kmlExportProvider.generate(output, deviceId, from, to);
+                kmlExportProvider.generate(output, deviceId, geofenceId, from, to);
             } catch (XMLStreamException | StorageException e) {
                 throw new WebApplicationException(e);
             }

@@ -17,6 +17,7 @@ package org.traccar.reports;
 
 import org.traccar.helper.model.PositionUtil;
 import org.traccar.model.Device;
+import org.traccar.model.Geofence;
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
 import org.traccar.storage.query.Columns;
@@ -43,12 +44,15 @@ public class KmlExportProvider {
     }
 
     public void generate(
-            OutputStream outputStream, long deviceId, Date from, Date to)
+            OutputStream outputStream, long deviceId, long geofenceId, Date from, Date to)
             throws StorageException, XMLStreamException {
 
         var device = storage.getObject(Device.class, new Request(
                 new Columns.All(), new Condition.Equals("id", deviceId)));
         var positions = PositionUtil.getPositions(storage, deviceId, from, to);
+
+        Geofence geofence = geofenceId == 0 ? null : storage.getObject(Geofence.class, new Request(
+                new Columns.All(), new Condition.Equals("id", geofenceId)));
 
         var dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
@@ -78,6 +82,7 @@ public class KmlExportProvider {
         writer.writeEndElement();
         writer.writeStartElement("coordinates");
         writer.writeCharacters(positions.stream()
+                .filter(position -> geofence == null || geofence.containsPosition(position))
                 .map(p -> String.format("%f,%f,%f", p.getLongitude(), p.getLatitude(), p.getAltitude()))
                 .collect(Collectors.joining(" ")));
         writer.writeEndElement();
