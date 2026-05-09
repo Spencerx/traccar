@@ -168,12 +168,12 @@ public class PositionResource extends BaseResource {
     @GET
     @Produces("application/gpx+xml")
     public Response getGpx(
-            @QueryParam("deviceId") long deviceId,
+            @QueryParam("deviceId") long deviceId, @QueryParam("geofenceId") long geofenceId,
             @QueryParam("from") Date from, @QueryParam("to") Date to) throws StorageException {
         permissionsService.checkPermission(Device.class, getUserId(), deviceId);
         StreamingOutput stream = output -> {
             try {
-                gpxExportProvider.generate(output, deviceId, from, to);
+                gpxExportProvider.generate(output, deviceId, geofenceId, from, to);
             } catch (XMLStreamException | StorageException e) {
                 throw new WebApplicationException(e);
             }
