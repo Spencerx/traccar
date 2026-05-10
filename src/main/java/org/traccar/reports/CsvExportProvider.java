@@ -50,8 +50,8 @@ public class CsvExportProvider {
     }
 
     static String formatCell(Object value) {
-        if (value instanceof String) {
-            String trimmed = ((String) value).trim();
+        if (value instanceof String stringValue) {
+            String trimmed = stringValue.trim();
             if (!trimmed.isEmpty()) {
                 char c = trimmed.charAt(0);
                 return c == '=' || c == '+' || c == '-' || c == '@' ? "" : trimmed;

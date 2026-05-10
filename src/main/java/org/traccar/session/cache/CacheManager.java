@@ -233,9 +233,9 @@ public class CacheManager implements BroadcastInterface {
                 return;
             }
 
-            if (after instanceof GroupedModel) {
+            if (after instanceof GroupedModel afterGrouped) {
                 long beforeGroupId = ((GroupedModel) before).getGroupId();
-                long afterGroupId = ((GroupedModel) after).getGroupId();
+                long afterGroupId = afterGrouped.getGroupId();
                 if (beforeGroupId != afterGroupId) {
                     if (beforeGroupId > 0) {
                         invalidatePermission(clazz, id, Group.class, beforeGroupId, false);
@@ -244,9 +244,9 @@ public class CacheManager implements BroadcastInterface {
                         invalidatePermission(clazz, id, Group.class, afterGroupId, true);
                     }
                 }
-            } else if (after instanceof Schedulable) {
+            } else if (after instanceof Schedulable afterSchedulable) {
                 long beforeCalendarId = ((Schedulable) before).getCalendarId();
-                long afterCalendarId = ((Schedulable) after).getCalendarId();
+                long afterCalendarId = afterSchedulable.getCalendarId();
                 if (beforeCalendarId != afterCalendarId) {
                     if (beforeCalendarId > 0) {
                         invalidatePermission(clazz, id, Calendar.class, beforeCalendarId, false);
