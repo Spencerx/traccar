@@ -892,7 +892,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
                     } else {
                         int extension = buf.readUnsignedByte();
                         if (type == MSG_GPS_LBS_STATUS_3 || type == MSG_FENCE_MULTI) {
-                            extension += (buf.getUnsignedByte(buf.readerIndex()) & 0xf) << 8;
+                            extension += (buf.getUnsignedByte(buf.readerIndex()) >> 4) << 8;
                         }
                         if (type == MSG_STATUS && modelSW) {
                             position.set(Position.KEY_POWER, (double) extension);
