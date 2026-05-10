@@ -9,7 +9,7 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ComputedAttributesTest {
+public class ComputedAttributesProviderTest {
 
     @Test
     public void testComputedAttributes() {
