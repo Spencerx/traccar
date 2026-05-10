@@ -35,7 +35,6 @@ import org.traccar.session.cache.CacheManager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -89,7 +88,7 @@ public class ComputedAttributesHandler extends BasePositionHandler {
                 .structuredLiteral(true);
         engine = new JexlBuilder()
                 .strict(true)
-                .namespaces(Collections.singletonMap("math", Math.class))
+                .namespaces(Map.of("math", Math.class))
                 .sandbox(sandbox)
                 .create();
         includeDeviceAttributes = config.getBoolean(Keys.PROCESSING_COMPUTED_ATTRIBUTES_DEVICE_ATTRIBUTES);
