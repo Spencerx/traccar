@@ -33,6 +33,7 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -66,7 +67,6 @@ public class CsvExportProvider {
 
         var server = permissionsService.getServer();
         var user = permissionsService.getUser(userId);
-        var positions = PositionUtil.getPositions(storage, deviceId, from, to);
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dateFormat.setTimeZone(UserUtil.getTimezone(server, user));
@@ -74,8 +74,14 @@ public class CsvExportProvider {
         Geofence geofence = geofenceId == 0 ? null : storage.getObject(Geofence.class, new Request(
                 new Columns.All(), new Condition.Equals("id", geofenceId)));
 
+        List<Position> positions;
+        try (var stream = PositionUtil.getPositionsStream(storage, deviceId, from, to)) {
+            positions = stream
+                    .filter(position -> geofence == null || geofence.containsPosition(position))
+                    .toList();
+        }
+
         var attributes = positions.stream()
-                .filter(position -> geofence == null || geofence.containsPosition(position))
                 .flatMap(position -> position.getAttributes().keySet().stream())
                 .collect(Collectors.toUnmodifiableSet());
 
