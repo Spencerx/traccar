@@ -24,7 +24,10 @@ import org.traccar.NetworkMessage;
 import org.traccar.Protocol;
 import org.traccar.helper.Checksum;
 import org.traccar.helper.UnitsConverter;
+import org.traccar.model.CellTower;
+import org.traccar.model.Network;
 import org.traccar.model.Position;
+import org.traccar.model.WifiAccessPoint;
 import org.traccar.session.DeviceSession;
 
 import java.net.SocketAddress;
@@ -38,8 +41,6 @@ public class Xexun3ProtocolDecoder extends BaseProtocolDecoder {
 
     public static final int MSG_DATA = 0x20;
     public static final int MSG_COMMAND = 0x21;
-
-    public static final int SUB_GPS = 0x64;
 
     private void sendResponse(Channel channel, int type, int index, ByteBuf imei) {
         if (channel != null) {
@@ -56,6 +57,23 @@ public class Xexun3ProtocolDecoder extends BaseProtocolDecoder {
             response.writeByte(0xCF);
             channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
         }
+    }
+
+    private String decodeAlarm(int value) {
+        return switch (value) {
+            case 1 -> Position.ALARM_SOS;
+            case 2 -> Position.ALARM_LOW_BATTERY;
+            case 4 -> Position.ALARM_REMOVING;
+            case 5 -> Position.ALARM_MOVEMENT;
+            case 7 -> Position.ALARM_FALL_DOWN;
+            case 8 -> Position.ALARM_ACCIDENT;
+            case 11 -> Position.ALARM_POWER_RESTORED;
+            case 12 -> Position.ALARM_POWER_CUT;
+            case 13 -> Position.ALARM_POWER_ON;
+            case 14 -> Position.ALARM_POWER_OFF;
+            case 15, 16 -> Position.ALARM_DOOR;
+            default -> null;
+        };
     }
 
     @Override
@@ -88,28 +106,103 @@ public class Xexun3ProtocolDecoder extends BaseProtocolDecoder {
         Position position = new Position(getProtocolName());
         position.setDeviceId(deviceSession.getDeviceId());
 
+        Network network = new Network();
+        boolean hasLocation = false;
+
         int bodyEnd = buf.readerIndex() + length - 11;
         while (buf.readerIndex() < bodyEnd) {
             int subType = buf.readUnsignedByte();
             int subLength = buf.readUnsignedByte();
             int subEnd = buf.readerIndex() + subLength;
 
-            if (subType == SUB_GPS) {
-                position.setTime(new Date(buf.readUnsignedInt() * 1000));
-                position.setValid(true);
-                position.setLatitude(buf.readDouble());
-                position.setLongitude(buf.readDouble());
-                position.setAltitude(buf.readFloat());
-                buf.readUnsignedByte(); // ephemeris
-                position.set(Position.KEY_SATELLITES, buf.readUnsignedByte());
-                buf.readUnsignedByte(); // signal
-                position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedShort()));
+            switch (subType) {
+                case 0x64 -> {
+                    position.setTime(new Date(buf.readUnsignedInt() * 1000));
+                    position.setValid(true);
+                    position.setLatitude(buf.readDouble());
+                    position.setLongitude(buf.readDouble());
+                    position.setAltitude(buf.readFloat());
+                    buf.readUnsignedByte(); // ephemeris
+                    position.set(Position.KEY_SATELLITES, buf.readUnsignedByte());
+                    buf.readUnsignedByte(); // signal
+                    position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedShort()));
+                    hasLocation = true;
+                }
+                case 0x65 -> {
+                    position.setDeviceTime(new Date(buf.readUnsignedInt() * 1000));
+                    int count = buf.readUnsignedByte();
+                    for (int i = 0; i < count; i++) {
+                        String mac = ByteBufUtil.hexDump(buf.readSlice(6)).replaceAll("(..)", "$1:");
+                        network.addWifiAccessPoint(WifiAccessPoint.from(
+                                mac.substring(0, mac.length() - 1), buf.readByte()));
+                    }
+                }
+                case 0x66 -> {
+                    position.setDeviceTime(new Date(buf.readUnsignedInt() * 1000));
+                    network.addCellTower(CellTower.from(
+                            buf.readUnsignedShort(),
+                            buf.readUnsignedShort(),
+                            buf.readInt(),
+                            buf.readUnsignedInt(),
+                            buf.readUnsignedByte()));
+                }
+                case 0x69 -> {
+                    position.setDeviceTime(new Date(buf.readUnsignedInt() * 1000));
+                    int alarmId = buf.readUnsignedByte();
+                    int dataLength = buf.readUnsignedByte();
+                    position.addAlarm(decodeAlarm(alarmId));
+                    if (alarmId == 17 && dataLength > 0) {
+                        position.set(Position.KEY_ICCID, ByteBufUtil.hexDump(buf.readSlice(dataLength)));
+                    }
+                }
+                case 0x6A -> {
+                    position.set(Position.KEY_BATTERY_LEVEL, buf.readUnsignedByte());
+                    buf.readUnsignedShort(); // network duration
+                    position.set(Position.KEY_RSSI, buf.readUnsignedByte());
+                    buf.readUnsignedByte(); // track sequence
+                    position.set(Position.KEY_MOTION, buf.readUnsignedByte() > 0);
+                    position.set(Position.KEY_CHARGE, buf.readUnsignedByte() > 0);
+                    int steps = buf.readUnsignedShort();
+                    if (steps != 0xFFFF) {
+                        position.set(Position.KEY_STEPS, steps);
+                    }
+                    int temperature = buf.readByte();
+                    if (temperature != -1) {
+                        position.set("temperature", temperature);
+                    }
+                    buf.readUnsignedByte(); // respiratory rate
+                    int heartRate = buf.readUnsignedByte();
+                    if (heartRate != 0xFF) {
+                        position.set(Position.KEY_HEART_RATE, heartRate);
+                    }
+                    buf.readUnsignedByte(); // blood pressure systolic
+                    buf.readUnsignedByte(); // blood pressure diastolic
+                    buf.readUnsignedByte(); // blood oxygen
+                    int fuel = buf.readUnsignedByte();
+                    if (fuel != 0xFF) {
+                        position.set(Position.KEY_FUEL_LEVEL, fuel);
+                    }
+                }
+                default -> {
+                }
             }
 
             buf.readerIndex(subEnd);
         }
 
-        return position.getDeviceTime() != null ? position : null;
+        if (network.getCellTowers() != null || network.getWifiAccessPoints() != null) {
+            position.setNetwork(network);
+        }
+
+        if (position.getDeviceTime() == null) {
+            return null;
+        }
+
+        if (!hasLocation) {
+            getLastLocation(position, position.getDeviceTime());
+        }
+
+        return position;
     }
 
 }
