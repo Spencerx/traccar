@@ -90,8 +90,8 @@ public class ComputedAttributesProvider {
         if (includeDeviceAttributes) {
             Device device = cacheManager.getObject(Device.class, position.getDeviceId());
             if (device != null) {
-                for (String key : device.getAttributes().keySet()) {
-                    result.set(key, device.getAttributes().get(key));
+                for (var entry : device.getAttributes().entrySet()) {
+                    result.set(entry.getKey(), entry.getValue());
                 }
             }
         }
