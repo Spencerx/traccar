@@ -49,6 +49,8 @@ public class WialonProtocolDecoder extends BaseProtocolDecoder {
             .expression("(.*)")                  // message
             .compile();
 
+    private static final Pattern PATTERN_PARAM = Pattern.compile("(.*):[1-3]:(.*)");
+
     private static final Pattern PATTERN = new PatternBuilder()
             .number("(?:NA|(dd)(dd)(dd));")      // date (ddmmyy)
             .number("(?:NA|(dd)(dd)(dd));")      // time (hhmmss)
@@ -137,7 +139,7 @@ public class WialonProtocolDecoder extends BaseProtocolDecoder {
         if (parser.hasNext()) {
             String[] values = parser.next().split(",");
             for (String param : values) {
-                Matcher paramParser = Pattern.compile("(.*):[1-3]:(.*)").matcher(param);
+                Matcher paramParser = PATTERN_PARAM.matcher(param);
                 if (paramParser.matches()) {
                     String key = paramParser.group(1).toLowerCase();
                     String value = paramParser.group(2);

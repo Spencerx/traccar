@@ -1257,7 +1257,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         Network network = new Network();
 
         parser.nextInt(); // count
-        Matcher matcher = Pattern.compile("([0-9a-fA-F]{12}),(-?\\d+),,,,").matcher(parser.next());
+        Matcher matcher = PATTERN_WIFI.matcher(parser.next());
         while (matcher.find()) {
             String mac = matcher.group(1).replaceAll("(..)", "$1:");
             network.addWifiAccessPoint(WifiAccessPoint.from(
@@ -1531,6 +1531,8 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             .number("(xxxx)")                    // count number
             .text("$").optional()
             .compile();
+
+    private static final Pattern PATTERN_WIFI = Pattern.compile("([0-9a-fA-F]{12}),(-?\\d+),,,,");
 
     private Object decodeLsa(Channel channel, SocketAddress remoteAddress, String sentence) {
         Parser parser = new Parser(PATTERN_LSA, sentence);

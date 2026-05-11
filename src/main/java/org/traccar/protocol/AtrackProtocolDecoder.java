@@ -498,6 +498,9 @@ public class AtrackProtocolDecoder extends BaseProtocolDecoder {
             .optional(2)
             .compile();
 
+    private static final Pattern PATTERN_FULS = Pattern.compile(
+            "FULS:F=(\\p{XDigit}+) t=(\\p{XDigit}+) N=(\\p{XDigit}+)");
+
     private List<Position> decodeText(Channel channel, SocketAddress remoteAddress, String sentence) {
 
         int positionIndex = -1;
@@ -665,8 +668,7 @@ public class AtrackProtocolDecoder extends BaseProtocolDecoder {
 
             String message = readString(buf);
             if (message != null && !message.isEmpty()) {
-                Pattern pattern = Pattern.compile("FULS:F=(\\p{XDigit}+) t=(\\p{XDigit}+) N=(\\p{XDigit}+)");
-                Matcher matcher = pattern.matcher(message);
+                Matcher matcher = PATTERN_FULS.matcher(message);
                 if (matcher.find()) {
                     int value = Integer.parseInt(matcher.group(3), decimalFuel ? 10 : 16);
                     position.set(Position.KEY_FUEL, value * 0.1);
