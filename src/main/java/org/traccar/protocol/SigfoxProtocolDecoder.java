@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 Anton Tananaev (anton@traccar.org)
+ * Copyright 2017 - 2026 Anton Tananaev (anton@traccar.org)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,16 +50,13 @@ public class SigfoxProtocolDecoder extends BaseHttpProtocolDecoder {
     }
 
     private boolean jsonContains(JsonObject json, String key) {
-        if (json.containsKey(key)) {
-            JsonValue value = json.get(key);
+        JsonValue value = json.get(key);
+        if (value != null) {
             if (value.getValueType() == JsonValue.ValueType.STRING) {
                 return !((JsonString) value).getString().equals("null");
-
-            } else {
-                return true;
             }
         }
-        return false;
+        return value != null;
     }
 
     private boolean getJsonBoolean(JsonObject json, String key) {

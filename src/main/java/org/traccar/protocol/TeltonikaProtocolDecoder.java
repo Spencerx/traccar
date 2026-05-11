@@ -325,7 +325,7 @@ public class TeltonikaProtocolDecoder extends BaseProtocolDecoder {
         } else {
             int index = buf.readerIndex();
             boolean decoded = false;
-            for (var entry : PARAMETERS.getOrDefault(id, new HashMap<>()).entrySet()) {
+            for (var entry : PARAMETERS.getOrDefault(id, Map.of()).entrySet()) {
                 if (entry.getKey().test(model)) {
                     entry.getValue().accept(position, buf);
                     decoded = true;
