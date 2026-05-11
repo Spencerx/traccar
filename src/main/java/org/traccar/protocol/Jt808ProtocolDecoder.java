@@ -38,8 +38,9 @@ import org.traccar.model.Position;
 import java.net.SocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
@@ -48,6 +49,9 @@ import java.util.Set;
 import java.util.TimeZone;
 
 public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter
+            .ofPattern("yyyyMMddHHmmss").withZone(ZoneOffset.UTC);
 
     public Jt808ProtocolDecoder(Protocol protocol) {
         super(protocol);
@@ -299,9 +303,7 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
         if (buf.getByte(buf.readerIndex()) == '(') {
             String sentence = buf.toString(StandardCharsets.US_ASCII);
             if (sentence.contains("BASE,2")) {
-                DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-                dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-                String response = sentence.replace("TIME", dateFormat.format(new Date()));
+                String response = sentence.replace("TIME", DATE_FORMAT.format(Instant.now()));
                 if (channel != null) {
                     channel.writeAndFlush(new NetworkMessage(
                             Unpooled.copiedBuffer(response, StandardCharsets.US_ASCII), remoteAddress));

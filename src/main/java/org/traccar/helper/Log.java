@@ -31,7 +31,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystems;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -57,12 +59,14 @@ public final class Log {
         private String suffix;
         private Writer writer;
         private final boolean rotate;
-        private final String template;
+        private final DateTimeFormatter template;
 
         RollingFileHandler(String name, boolean rotate, String rotateInterval) {
             this.name = name;
             this.rotate = rotate;
-            this.template = rotateInterval.equalsIgnoreCase("HOUR") ? "yyyyMMddHH" : "yyyyMMdd";
+            this.template = DateTimeFormatter
+                    .ofPattern(rotateInterval.equalsIgnoreCase("HOUR") ? "yyyyMMddHH" : "yyyyMMdd")
+                    .withZone(ZoneId.systemDefault());
         }
 
         @Override
@@ -71,7 +75,7 @@ public final class Log {
                 try {
                     String suffix = "";
                     if (rotate) {
-                        suffix = new SimpleDateFormat(template).format(new Date(record.getMillis()));
+                        suffix = template.format(Instant.ofEpochMilli(record.getMillis()));
                         if (writer != null && !suffix.equals(this.suffix)) {
                             writer.close();
                             writer = null;

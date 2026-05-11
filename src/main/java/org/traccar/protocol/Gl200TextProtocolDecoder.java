@@ -24,6 +24,7 @@ import org.traccar.Protocol;
 import org.traccar.config.Keys;
 import org.traccar.helper.BitUtil;
 import org.traccar.helper.DataConverter;
+import org.traccar.helper.DateUtil;
 import org.traccar.helper.Parser;
 import org.traccar.helper.PatternBuilder;
 import org.traccar.helper.UnitsConverter;
@@ -35,18 +36,19 @@ import org.traccar.session.DeviceSession;
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter
+            .ofPattern("yyyyMMddHHmmss").withZone(ZoneOffset.UTC);
 
     private static final Map<String, String> PROTOCOL_MODELS = Map.ofEntries(
             Map.entry("02", "GL200"),
@@ -96,12 +98,8 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
 
     private boolean ignoreFixTime;
 
-    private final DateFormat dateFormat;
-
     public Gl200TextProtocolDecoder(Protocol protocol) {
         super(protocol);
-        dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     @Override
@@ -164,7 +162,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return null;
     }
 
-    private Position decodeAck(Channel channel, SocketAddress remoteAddress, String[] values) throws ParseException {
+    private Position decodeAck(Channel channel, SocketAddress remoteAddress, String[] values) {
         DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, values[2]);
         if (deviceSession == null) {
             return null;
@@ -177,7 +175,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         } else {
             Position position = new Position(getProtocolName());
             position.setDeviceId(deviceSession.getDeviceId());
-            getLastLocation(position, dateFormat.parse(values[values.length - 2]));
+            getLastLocation(position, DateUtil.parse(DATE_FORMAT, values[values.length - 2]));
             position.setValid(false);
             position.set(Position.KEY_RESULT, values[0]);
             return position;
@@ -185,7 +183,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return null;
     }
 
-    private Object decodeInf(Channel channel, SocketAddress remoteAddress, String[] v) throws ParseException {
+    private Object decodeInf(Channel channel, SocketAddress remoteAddress, String[] v) {
         int index = 0;
         index += 1; // header
         String protocolVersion = v[index++];
@@ -274,7 +272,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             position.set(Position.PREFIX_ADC + 3, Integer.parseInt(v[index++]));
         }
 
-        Date time = dateFormat.parse(v[v.length - 2]);
+        Date time = DateUtil.parse(DATE_FORMAT, v[v.length - 2]);
         if (ignoreFixTime) {
             position.setTime(time);
         } else {
@@ -395,7 +393,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         }
     }
 
-    private int decodeLocation(Position position, String model, String[] v, int index) throws ParseException {
+    private int decodeLocation(Position position, String model, String[] v, int index) {
         double hdop = v[index++].isEmpty() ? 0 : Double.parseDouble(v[index - 1]);
         position.set(Position.KEY_HDOP, hdop);
 
@@ -408,7 +406,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             position.setValid(true);
             position.setLongitude(v[index++].isEmpty() ? 0 : Double.parseDouble(v[index - 1]));
             position.setLatitude(v[index++].isEmpty() ? 0 : Double.parseDouble(v[index - 1]));
-            position.setTime(dateFormat.parse(v[index++]));
+            position.setTime(DateUtil.parse(DATE_FORMAT, v[index++]));
         } else {
             index += 3;
             getLastLocation(position, null);
@@ -517,7 +515,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeCan(Channel channel, SocketAddress remoteAddress, String[] v) throws ParseException {
+    private Object decodeCan(Channel channel, SocketAddress remoteAddress, String[] v) {
         int index = 0;
         index += 1; // header
         String protocolVersion = v[index++];
@@ -750,9 +748,6 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             index += 1; // tachograph timestamp
         }
 
-        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-
         if (!"GV355CEU".equals(model) && BitUtil.check(reportMask, 30)) {
             while (v[index].isEmpty()) {
                 index += 1;
@@ -764,7 +759,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
                 position.setAltitude(Double.parseDouble(v[index++]));
                 position.setLongitude(Double.parseDouble(v[index++]));
                 position.setLatitude(Double.parseDouble(v[index++]));
-                position.setTime(dateFormat.parse(v[index++]));
+                position.setTime(DateUtil.parse(DATE_FORMAT, v[index++]));
             } else {
                 index += 6; // no location
                 getLastLocation(position, null);
@@ -780,9 +775,9 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
 
         index = v.length - 2;
         if (ignoreFixTime) {
-            position.setTime(dateFormat.parse(v[index]));
+            position.setTime(DateUtil.parse(DATE_FORMAT, v[index]));
         } else {
-            position.setDeviceTime(dateFormat.parse(v[index]));
+            position.setDeviceTime(DateUtil.parse(DATE_FORMAT, v[index]));
         }
 
         return position;
@@ -935,7 +930,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return positions;
     }
 
-    private Object decodeEri(Channel channel, SocketAddress remoteAddress, String[] v) throws ParseException {
+    private Object decodeEri(Channel channel, SocketAddress remoteAddress, String[] v) {
         int index = 0;
         index += 1; // header
         String protocolVersion = v[index++];
@@ -1006,7 +1001,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             index += 1; // reserved / uart device type
         }
 
-        Date time = dateFormat.parse(v[v.length - 2]);
+        Date time = DateUtil.parse(DATE_FORMAT, v[v.length - 2]);
         if (ignoreFixTime) {
             position.setTime(time);
             positions.clear();
@@ -1126,7 +1121,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
     }
 
     private Object decodeIgn(
-            Channel channel, SocketAddress remoteAddress, String[] v, String type) throws ParseException {
+            Channel channel, SocketAddress remoteAddress, String[] v, String type) {
         int index = 0;
         index += 1; // header
         String protocolVersion = v[index++];
@@ -1153,7 +1148,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             position.set(Position.KEY_ODOMETER, Double.parseDouble(v[index - 1]) * 1000);
         }
 
-        Date time = dateFormat.parse(v[v.length - 2]);
+        Date time = DateUtil.parse(DATE_FORMAT, v[v.length - 2]);
         if (ignoreFixTime) {
             position.setTime(time);
         } else {
@@ -1552,7 +1547,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeLbs(Channel channel, SocketAddress remoteAddress, String[] v) throws ParseException {
+    private Object decodeLbs(Channel channel, SocketAddress remoteAddress, String[] v) {
         int index = 0;
         index += 1; // header
         index += 1; // protocol version
@@ -1587,13 +1582,13 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         }
         position.setNetwork(network);
 
-        Date time = dateFormat.parse(v[v.length - 2]);
+        Date time = DateUtil.parse(DATE_FORMAT, v[v.length - 2]);
         getLastLocation(position, time);
 
         return position;
     }
 
-    private Object decodeDat(Channel channel, SocketAddress remoteAddress, String[] v) throws ParseException {
+    private Object decodeDat(Channel channel, SocketAddress remoteAddress, String[] v) {
         int index = 0;
         index += 1; // header
 
@@ -1617,7 +1612,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
 
         decodeLocation(position, model, v, index);
 
-        Date time = dateFormat.parse(v[v.length - 2]);
+        Date time = DateUtil.parse(DATE_FORMAT, v[v.length - 2]);
         if (ignoreFixTime) {
             position.setTime(time);
         } else {
@@ -1628,7 +1623,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
     }
 
     private Object decodeBasic(
-            Channel channel, SocketAddress remoteAddress, String[] v, String type) throws ParseException {
+            Channel channel, SocketAddress remoteAddress, String[] v, String type) {
 
         int index = 0;
         index += 1; // header
@@ -1667,7 +1662,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
                 position.setAltitude(Double.parseDouble(v[index++]));
                 position.setLongitude(Double.parseDouble(v[index++]));
                 position.setLatitude(Double.parseDouble(v[index++]));
-                position.setTime(dateFormat.parse(v[index++]));
+                position.setTime(DateUtil.parse(DATE_FORMAT, v[index++]));
                 break;
             }
             index += 1;
@@ -1693,9 +1688,9 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         index = v.length - 2;
         if (v[index].length() == 14) {
             if (ignoreFixTime) {
-                position.setTime(dateFormat.parse(v[index]));
+                position.setTime(DateUtil.parse(DATE_FORMAT, v[index]));
             } else {
-                position.setDeviceTime(dateFormat.parse(v[index]));
+                position.setDeviceTime(DateUtil.parse(DATE_FORMAT, v[index]));
             }
 
             if (position.hasAttribute(Position.KEY_HDOP) && v[index - 1].matches("\\d{1,3}")) {

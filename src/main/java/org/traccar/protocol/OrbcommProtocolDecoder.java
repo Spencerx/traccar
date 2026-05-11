@@ -21,6 +21,7 @@ import org.traccar.BasePipelineFactory;
 import org.traccar.BaseProtocolDecoder;
 import org.traccar.session.DeviceSession;
 import org.traccar.Protocol;
+import org.traccar.helper.DateUtil;
 import org.traccar.helper.UnitsConverter;
 import org.traccar.model.Position;
 
@@ -31,13 +32,15 @@ import jakarta.json.JsonValue;
 import java.io.StringReader;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.LinkedList;
-import java.util.TimeZone;
 
 public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter
+            .ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
 
     public OrbcommProtocolDecoder(Protocol protocol) {
         super(protocol);
@@ -55,9 +58,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
             OrbcommProtocolPoller poller =
                     BasePipelineFactory.getHandler(channel.pipeline(), OrbcommProtocolPoller.class);
             if (poller != null) {
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-                poller.setStartTime(dateFormat.parse(json.getString("NextStartUTC")));
+                poller.setStartTime(DateUtil.parse(DATE_FORMAT, json.getString("NextStartUTC")));
             }
         }
 
@@ -76,9 +77,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
                 Position position = new Position(getProtocolName());
                 position.setDeviceId(deviceSession.getDeviceId());
 
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-                position.setDeviceTime(dateFormat.parse(message.getString("MessageUTC")));
+                position.setDeviceTime(DateUtil.parse(DATE_FORMAT, message.getString("MessageUTC")));
 
                 JsonArray fields = message.getJsonObject("Payload").getJsonArray("Fields");
                 for (int j = 0; j < fields.size(); j++) {
