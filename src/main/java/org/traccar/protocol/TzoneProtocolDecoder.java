@@ -34,23 +34,22 @@ import org.traccar.model.Position;
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 public class TzoneProtocolDecoder extends BaseProtocolDecoder {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter
+            .ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
 
     public TzoneProtocolDecoder(Protocol protocol) {
         super(protocol);
     }
 
     private void sendResponse(Channel channel, SocketAddress remoteAddress, int index) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-
         String ack = String.format("@ACK,%d#", index);
-        String time = String.format("@UTC time:%s", dateFormat.format(new Date()));
+        String time = String.format("@UTC time:%s", DATE_FORMAT.format(Instant.now()));
 
         ByteBuf response = Unpooled.copiedBuffer(ack + time, StandardCharsets.US_ASCII);
 

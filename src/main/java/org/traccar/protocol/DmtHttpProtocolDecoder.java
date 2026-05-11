@@ -22,6 +22,7 @@ import org.traccar.BaseHttpProtocolDecoder;
 import org.traccar.session.DeviceSession;
 import org.traccar.Protocol;
 import org.traccar.helper.BitUtil;
+import org.traccar.helper.DateUtil;
 import org.traccar.helper.UnitsConverter;
 import org.traccar.model.Position;
 
@@ -31,17 +32,18 @@ import jakarta.json.JsonObject;
 import java.io.StringReader;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.TimeZone;
 
 public class DmtHttpProtocolDecoder extends BaseHttpProtocolDecoder {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter
+            .ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
 
     public DmtHttpProtocolDecoder(Protocol protocol) {
         super(protocol);
@@ -67,10 +69,7 @@ public class DmtHttpProtocolDecoder extends BaseHttpProtocolDecoder {
     }
 
     private Collection<Position> decodeTraditional(
-            Channel channel, SocketAddress remoteAddress, JsonObject root) throws ParseException {
-
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Channel channel, SocketAddress remoteAddress, JsonObject root) {
 
         DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, root.getString("IMEI"));
         if (deviceSession == null) {
@@ -90,7 +89,7 @@ public class DmtHttpProtocolDecoder extends BaseHttpProtocolDecoder {
             position.set(Position.KEY_INDEX, record.getInt("SeqNo"));
             position.set(Position.KEY_EVENT, record.getInt("Reason"));
 
-            position.setDeviceTime(dateFormat.parse(record.getString("DateUTC")));
+            position.setDeviceTime(DateUtil.parse(DATE_FORMAT, record.getString("DateUTC")));
 
             JsonArray fields = record.getJsonArray("Fields");
 
@@ -98,7 +97,7 @@ public class DmtHttpProtocolDecoder extends BaseHttpProtocolDecoder {
                 JsonObject field = fields.getJsonObject(j);
                 switch (field.getInt("FType")) {
                     case 0:
-                        position.setFixTime(dateFormat.parse(field.getString("GpsUTC")));
+                        position.setFixTime(DateUtil.parse(DATE_FORMAT, field.getString("GpsUTC")));
                         position.setLatitude(field.getJsonNumber("Lat").doubleValue());
                         position.setLongitude(field.getJsonNumber("Long").doubleValue());
                         position.setAltitude(field.getInt("Alt"));

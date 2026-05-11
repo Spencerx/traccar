@@ -27,6 +27,7 @@ import org.traccar.config.Keys;
 import org.traccar.helper.BitUtil;
 import org.traccar.helper.DataConverter;
 import org.traccar.helper.DateBuilder;
+import org.traccar.helper.DateUtil;
 import org.traccar.helper.Parser;
 import org.traccar.helper.PatternBuilder;
 import org.traccar.helper.UnitsConverter;
@@ -36,19 +37,20 @@ import org.traccar.model.Position;
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AtrackProtocolDecoder extends BaseProtocolDecoder {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter
+            .ofPattern("yyyyMMddHHmmss").withZone(ZoneOffset.UTC);
 
     private static final int MIN_DATA_LENGTH = 40;
 
@@ -547,13 +549,7 @@ public class AtrackProtocolDecoder extends BaseProtocolDecoder {
 
         String time = parser.next();
         if (time.length() >= 14) {
-            try {
-                DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-                dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-                position.setTime(dateFormat.parse(time));
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
-            }
+            position.setTime(DateUtil.parse(DATE_FORMAT, time));
         } else {
             position.setTime(new Date(Long.parseLong(time) * 1000));
         }

@@ -30,9 +30,8 @@ import org.traccar.model.Position;
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -40,6 +39,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TramigoProtocolDecoder extends BaseProtocolDecoder {
+
+    private static final DateTimeFormatter DATE_FORMAT_WITH_SECONDS = DateTimeFormatter
+            .ofPattern("HH:mm:ss MMM d yyyy", Locale.ENGLISH).withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter DATE_FORMAT_NO_SECONDS = DateTimeFormatter
+            .ofPattern("HH:mm MMM d yyyy", Locale.ENGLISH).withZone(ZoneId.systemDefault());
 
     public TramigoProtocolDecoder(Protocol protocol) {
         super(protocol);
@@ -217,7 +221,7 @@ public class TramigoProtocolDecoder extends BaseProtocolDecoder {
 
     }
 
-    private Position decode80(Channel channel, SocketAddress remoteAddress, ByteBuf buf) throws ParseException {
+    private Position decode80(Channel channel, SocketAddress remoteAddress, ByteBuf buf) {
 
         buf.readUnsignedByte(); // version id
         int index = buf.readUnsignedShort();
@@ -268,10 +272,9 @@ public class TramigoProtocolDecoder extends BaseProtocolDecoder {
         if (!matcher.find()) {
             return null;
         }
-        DateFormat dateFormat = new SimpleDateFormat(
-                matcher.group(2) != null ? "HH:mm:ss MMM d yyyy" : "HH:mm MMM d yyyy", Locale.ENGLISH);
-        position.setTime(DateUtil.correctYear(
-                dateFormat.parse(matcher.group(1) + " " + Calendar.getInstance().get(Calendar.YEAR))));
+        DateTimeFormatter dateFormat = matcher.group(2) != null ? DATE_FORMAT_WITH_SECONDS : DATE_FORMAT_NO_SECONDS;
+        position.setTime(DateUtil.correctYear(DateUtil.parse(
+                dateFormat, matcher.group(1) + " " + Calendar.getInstance().get(Calendar.YEAR))));
 
         if (sentence.contains("Ignition on detected")) {
             position.set(Position.KEY_IGNITION, true);

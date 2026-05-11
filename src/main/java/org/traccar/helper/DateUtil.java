@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Anton Tananaev (anton@traccar.org)
+ * Copyright 2016 - 2026 Anton Tananaev (anton@traccar.org)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,6 +61,10 @@ public final class DateUtil {
 
     public static Date parseDate(String value) {
         return Date.from(Instant.from(DateTimeFormatter.ISO_ZONED_DATE_TIME.parse(value)));
+    }
+
+    public static Date parse(DateTimeFormatter formatter, String value) {
+        return Date.from(Instant.from(formatter.parse(value)));
     }
 
     public static String formatDate(Date date) {

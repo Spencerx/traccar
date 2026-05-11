@@ -30,11 +30,15 @@ import org.traccar.model.Command;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
 public class Jt808ProtocolEncoder extends BaseProtocolEncoder {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter
+            .ofPattern("yyMMddHHmmss").withZone(ZoneId.systemDefault());
 
     public Jt808ProtocolEncoder(Protocol protocol) {
         super(protocol);
@@ -103,8 +107,7 @@ public class Jt808ProtocolEncoder extends BaseProtocolEncoder {
                 case Command.TYPE_ENGINE_RESUME:
                     if (alternative) {
                         data.writeByte(command.getType().equals(Command.TYPE_ENGINE_STOP) ? 0x01 : 0x00);
-                        data.writeBytes(DataConverter.parseHex(
-                                new SimpleDateFormat("yyMMddHHmmss").format(new Date())));
+                        data.writeBytes(DataConverter.parseHex(DATE_FORMAT.format(Instant.now())));
                         return decoder.formatMessage(
                                 Jt808ProtocolDecoder.MSG_OIL_CONTROL, id, false, data);
                     } else {
