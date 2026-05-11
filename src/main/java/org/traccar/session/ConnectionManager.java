@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2024 Anton Tananaev (anton@traccar.org)
+ * Copyright 2015 - 2026 Anton Tananaev (anton@traccar.org)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -296,8 +296,9 @@ public class ConnectionManager implements BroadcastInterface {
             removeDeviceSession(device.getId());
         }
         for (long userId : deviceUsers.getOrDefault(device.getId(), Collections.emptySet())) {
-            if (listeners.containsKey(userId)) {
-                for (UpdateListener listener : listeners.get(userId)) {
+            Set<UpdateListener> userListeners = listeners.get(userId);
+            if (userListeners != null) {
+                for (UpdateListener listener : userListeners) {
                     listener.onUpdateDevice(device);
                 }
             }
@@ -310,8 +311,9 @@ public class ConnectionManager implements BroadcastInterface {
             broadcastService.updatePosition(true, position);
         }
         for (long userId : deviceUsers.getOrDefault(position.getDeviceId(), Collections.emptySet())) {
-            if (listeners.containsKey(userId)) {
-                for (UpdateListener listener : listeners.get(userId)) {
+            Set<UpdateListener> userListeners = listeners.get(userId);
+            if (userListeners != null) {
+                for (UpdateListener listener : userListeners) {
                     listener.onUpdatePosition(position);
                 }
             }
@@ -323,8 +325,9 @@ public class ConnectionManager implements BroadcastInterface {
         if (local) {
             broadcastService.updateEvent(true, userId, event);
         }
-        if (listeners.containsKey(userId)) {
-            for (UpdateListener listener : listeners.get(userId)) {
+        Set<UpdateListener> userListeners = listeners.get(userId);
+        if (userListeners != null) {
+            for (UpdateListener listener : userListeners) {
                 listener.onUpdateEvent(event);
             }
         }
