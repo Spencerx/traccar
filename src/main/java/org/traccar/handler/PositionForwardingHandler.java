@@ -90,7 +90,7 @@ public class PositionForwardingHandler extends BasePositionHandler {
                 }
             } finally {
                 int pending = scheduled ? deliveryPending.get() : deliveryPending.decrementAndGet();
-                LOGGER.warn("Position forwarding failed: " + pending + " pending", throwable);
+                LOGGER.warn("Position forwarding failed: {} pending", pending, throwable);
             }
         }
 
