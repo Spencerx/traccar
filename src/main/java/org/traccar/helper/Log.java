@@ -37,6 +37,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Locale;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -209,7 +210,7 @@ public final class Log {
 
         handler.setFormatter(new LogFormatter(fullStackTraces));
 
-        Level level = Level.parse(levelString.toUpperCase());
+        Level level = Level.parse(levelString.toUpperCase(Locale.ROOT));
         rootLogger.setLevel(level);
         handler.setLevel(level);
         handler.setFilter(record -> record != null && !record.getLoggerName().startsWith("sun"));

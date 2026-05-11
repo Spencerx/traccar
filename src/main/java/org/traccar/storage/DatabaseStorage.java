@@ -36,6 +36,7 @@ import java.util.Date;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -230,7 +231,7 @@ public class DatabaseStorage extends Storage {
             results.addAll(getConditionVariables(condition.getFirst()));
             results.addAll(getConditionVariables(condition.getSecond()));
         } else if (genericCondition instanceof Condition.Contains condition) {
-            String value = "%" + condition.getValue().toLowerCase() + "%";
+            String value = "%" + condition.getValue().toLowerCase(Locale.ROOT) + "%";
             results.addAll(Collections.nCopies(condition.getColumns().size(), value));
         } else if (genericCondition instanceof Condition.Permission condition) {
             long conditionId = condition.getOwnerId() > 0 ? condition.getOwnerId() : condition.getPropertyId();

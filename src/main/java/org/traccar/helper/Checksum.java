@@ -17,6 +17,7 @@ package org.traccar.helper;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 public final class Checksum {
 
@@ -208,7 +209,7 @@ public final class Checksum {
         for (byte b : msg.getBytes(StandardCharsets.US_ASCII)) {
             checksum += b;
         }
-        return String.format("%02X", checksum).toUpperCase();
+        return String.format("%02X", checksum).toUpperCase(Locale.ROOT);
     }
 
     public static long luhn(long imei) {

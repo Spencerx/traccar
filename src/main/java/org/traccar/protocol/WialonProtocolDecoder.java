@@ -31,6 +31,7 @@ import java.net.SocketAddress;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -141,7 +142,7 @@ public class WialonProtocolDecoder extends BaseProtocolDecoder {
             for (String param : values) {
                 Matcher paramParser = PATTERN_PARAM.matcher(param);
                 if (paramParser.matches()) {
-                    String key = paramParser.group(1).toLowerCase();
+                    String key = paramParser.group(1).toLowerCase(Locale.ROOT);
                     String value = paramParser.group(2);
                     try {
                         position.set(key, Double.parseDouble(value));

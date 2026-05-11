@@ -31,6 +31,7 @@ import org.traccar.model.Position;
 import org.traccar.helper.BitUtil;
 
 import java.net.SocketAddress;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class LaipacProtocolDecoder extends BaseProtocolDecoder {
@@ -205,7 +206,7 @@ public class LaipacProtocolDecoder extends BaseProtocolDecoder {
                 .setTime(parser.nextInt(0), parser.nextInt(0), parser.nextInt(0));
 
         String status = parser.next();
-        String upperCaseStatus = status.toUpperCase();
+        String upperCaseStatus = status.toUpperCase(Locale.ROOT);
         position.setValid(upperCaseStatus.equals("A") || upperCaseStatus.equals("R") || upperCaseStatus.equals("P"));
         position.set(Position.KEY_STATUS, status);
 

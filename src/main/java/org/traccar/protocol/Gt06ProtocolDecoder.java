@@ -41,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
@@ -244,7 +245,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
                 return true;
             case MSG_GPS_LBS_2:
             case MSG_GPS_LBS_DRIVER:
-                return model != null && NT_MODELS.contains(model.toUpperCase());
+                return model != null && NT_MODELS.contains(model.toUpperCase(Locale.ROOT));
             case 0xA3: // MSG_FENCE_SINGLE / MSG_STATUS_3
                 return variant == Variant.SEEWORLD;
             default:
@@ -486,7 +487,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
 
         String model = deviceSession != null ? getDeviceModel(deviceSession) : null;
         if (model != null) {
-            model = model.toUpperCase();
+            model = model.toUpperCase(Locale.ROOT);
         }
         boolean modelLW = model != null && model.startsWith("LW");
         boolean modelSW = "SEEWORLD".equals(model);

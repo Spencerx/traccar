@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.InvalidPropertiesFormatException;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -138,7 +139,7 @@ public class Config {
     }
 
     static String getEnvironmentVariableName(String key) {
-        return key.replaceAll("\\.", "_").replaceAll("(\\p{Lu})", "_$1").toUpperCase();
+        return key.replaceAll("\\.", "_").replaceAll("(\\p{Lu})", "_$1").toUpperCase(Locale.ROOT);
     }
 
 }

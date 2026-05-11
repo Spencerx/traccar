@@ -36,6 +36,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.Locale;
 
 public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
 
@@ -83,7 +84,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
                 for (int j = 0; j < fields.size(); j++) {
                     JsonObject field = fields.getJsonObject(j);
                     String value = field.getString("Value");
-                    switch (field.getString("Name").toLowerCase()) {
+                    switch (field.getString("Name").toLowerCase(Locale.ROOT)) {
                         case "eventtime" -> position.setDeviceTime(new Date(Long.parseLong(value) * 1000));
                         case "latitude" -> position.setLatitude(Integer.parseInt(value) / 60000.0);
                         case "longitude" -> position.setLongitude(Integer.parseInt(value) / 60000.0);

@@ -37,6 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -189,7 +190,7 @@ public class MeitrackProtocolDecoder extends BaseProtocolDecoder {
                 position.set(Position.PREFIX_ADC + i, parser.nextHexInt());
             }
 
-            switch (Objects.requireNonNullElse(getDeviceModel(deviceSession), "").toUpperCase()) {
+            switch (Objects.requireNonNullElse(getDeviceModel(deviceSession), "").toUpperCase(Locale.ROOT)) {
                 case "MVT340", "MVT380" -> {
                     position.set(Position.KEY_BATTERY, parser.nextHexInt() * 3.0 * 2.0 / 1024.0);
                     position.set(Position.KEY_POWER, parser.nextHexInt(0) * 3.0 * 16.0 / 1024.0);

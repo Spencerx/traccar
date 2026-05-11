@@ -30,6 +30,7 @@ import org.traccar.model.Position;
 
 import java.net.SocketAddress;
 import java.util.Date;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class TaipProtocolDecoder extends BaseProtocolDecoder {
@@ -261,7 +262,7 @@ public class TaipProtocolDecoder extends BaseProtocolDecoder {
             for (String attribute : attributes) {
                 int index = attribute.indexOf('=');
                 if (index != -1) {
-                    String key = attribute.substring(0, index).toLowerCase();
+                    String key = attribute.substring(0, index).toLowerCase(Locale.ROOT);
                     String value = attribute.substring(index + 1);
                     switch (key) {
                         case "id" -> {
@@ -306,7 +307,7 @@ public class TaipProtocolDecoder extends BaseProtocolDecoder {
                             response = ">ACK;ID=" + uniqueId + ";" + messageIndex + ";";
                         }
                         String model = getDeviceModel(deviceSession);
-                        boolean lantrix = model != null && model.toUpperCase().startsWith("LANTRIX");
+                        boolean lantrix = model != null && model.toUpperCase(Locale.ROOT).startsWith("LANTRIX");
                         int checksum = Checksum.xor(lantrix ? response : response + "*");
                         response += String.format("*%02X", checksum) + "<";
                     }
