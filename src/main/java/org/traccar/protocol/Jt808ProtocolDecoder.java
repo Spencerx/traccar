@@ -85,6 +85,10 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
 
     public static final int RESULT_SUCCESS = 0;
 
+    private static final Set<String> ALARM_MODELS_TAMPER = Set.of("G-360P", "G-508P");
+    private static final Set<String> ALARM_MODELS_MOVEMENT = Set.of("AL300", "GL100");
+    private static final Set<String> JC_MODELS = Set.of("JC371", "JC181", "JC182", "JC450", "JC451");
+
     private int delimiter = 0x7e;
     private Integer protocolVersion;
 
@@ -141,14 +145,14 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
     }
 
     private void decodeAlarm(Position position, String model, long value) {
-        if (model != null && Set.of("G-360P", "G-508P").contains(model)) {
+        if (model != null && ALARM_MODELS_TAMPER.contains(model)) {
             if (BitUtil.check(value, 0) || BitUtil.check(value, 4)) {
                 position.addAlarm(Position.ALARM_REMOVING);
             }
             if (BitUtil.check(value, 1)) {
                 position.addAlarm(Position.ALARM_TAMPERING);
             }
-        } else if (model != null && Set.of("AL300", "GL100").contains(model)) {
+        } else if (model != null && ALARM_MODELS_MOVEMENT.contains(model)) {
             if (BitUtil.check(value, 16)) {
                 position.addAlarm(Position.ALARM_MOVEMENT);
             }
@@ -871,8 +875,7 @@ public class Jt808ProtocolDecoder extends BaseProtocolDecoder {
                     }
                     break;
                 case 0xE8:
-                    if (model != null
-                            && Set.of("JC371", "JC181", "JC182", "JC450", "JC451").contains(model)) {
+                    if (model != null && JC_MODELS.contains(model)) {
                         int extendedType = buf.readUnsignedShort();
                         switch (extendedType) {
                             case 0x2002 -> {

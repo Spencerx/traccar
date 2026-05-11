@@ -121,6 +121,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
     public static final int MSG_IBUTTON = 0x61;
 
     private static final Set<String> NT_MODELS = Set.of("NT11", "NT20", "NT26", "NT40", "NT46", "VL100", "XT40");
+    private static final Set<String> VL_MODELS = Set.of("VL103", "LL303", "VL512", "G18");
 
     private enum Variant {
         VXT01,
@@ -484,10 +485,13 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
         }
 
         String model = deviceSession != null ? getDeviceModel(deviceSession) : null;
-        boolean modelLW = model != null && model.toUpperCase().startsWith("LW");
-        boolean modelSW = "SEEWORLD".equalsIgnoreCase(model);
-        boolean modelNT = model != null && NT_MODELS.contains(model.toUpperCase());
-        boolean modelVL = model != null && Set.of("VL103", "LL303", "VL512", "G18").contains(model.toUpperCase());
+        if (model != null) {
+            model = model.toUpperCase();
+        }
+        boolean modelLW = model != null && model.startsWith("LW");
+        boolean modelSW = "SEEWORLD".equals(model);
+        boolean modelNT = model != null && NT_MODELS.contains(model);
+        boolean modelVL = model != null && VL_MODELS.contains(model);
 
         if (type == MSG_LOGIN) {
 
