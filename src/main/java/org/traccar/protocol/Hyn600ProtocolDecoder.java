@@ -213,7 +213,7 @@ public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
             if (BitUtil.check(eventMask, 11)) {
                 buf.skipBytes(9);
             }
-            if (BitUtil.check(eventMask, 11)) {
+            if (BitUtil.check(eventMask, 12)) {
                 buf.skipBytes(8);
             }
         }
