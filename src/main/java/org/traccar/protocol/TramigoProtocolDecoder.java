@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2023 Anton Tananaev (anton@traccar.org)
+ * Copyright 2014 - 2026 Anton Tananaev (anton@traccar.org)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,10 @@ public class TramigoProtocolDecoder extends BaseProtocolDecoder {
     }
 
     private static final String[] DIRECTIONS = new String[] {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+
+    private static final Pattern PATTERN_COORDINATES = Pattern.compile("(-?\\d+\\.\\d+), (-?\\d+\\.\\d+)");
+    private static final Pattern PATTERN_DIRECTION = Pattern.compile("([NSWE]{1,2}) with speed (\\d+) km/h");
+    private static final Pattern PATTERN_TIME = Pattern.compile("(\\d{1,2}:\\d{2}(:\\d{2})? \\w{3} \\d{1,2})");
 
     @Override
     protected Object decode(
@@ -241,8 +245,7 @@ public class TramigoProtocolDecoder extends BaseProtocolDecoder {
 
         String sentence = buf.toString(StandardCharsets.US_ASCII);
 
-        Pattern pattern = Pattern.compile("(-?\\d+\\.\\d+), (-?\\d+\\.\\d+)");
-        Matcher matcher = pattern.matcher(sentence);
+        Matcher matcher = PATTERN_COORDINATES.matcher(sentence);
         if (!matcher.find()) {
             return null;
         }
@@ -250,8 +253,7 @@ public class TramigoProtocolDecoder extends BaseProtocolDecoder {
         position.setLongitude(Double.parseDouble(matcher.group(2)));
         position.setValid(true);
 
-        pattern = Pattern.compile("([NSWE]{1,2}) with speed (\\d+) km/h");
-        matcher = pattern.matcher(sentence);
+        matcher = PATTERN_DIRECTION.matcher(sentence);
         if (matcher.find()) {
             for (int i = 0; i < DIRECTIONS.length; i++) {
                 if (matcher.group(1).equals(DIRECTIONS[i])) {
@@ -262,8 +264,7 @@ public class TramigoProtocolDecoder extends BaseProtocolDecoder {
             position.setSpeed(UnitsConverter.knotsFromKph(Double.parseDouble(matcher.group(2))));
         }
 
-        pattern = Pattern.compile("(\\d{1,2}:\\d{2}(:\\d{2})? \\w{3} \\d{1,2})");
-        matcher = pattern.matcher(sentence);
+        matcher = PATTERN_TIME.matcher(sentence);
         if (!matcher.find()) {
             return null;
         }
