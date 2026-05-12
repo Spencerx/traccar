@@ -2,7 +2,6 @@ package org.traccar.session.cache;
 
 import org.traccar.model.BaseModel;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,7 +9,7 @@ import java.util.stream.Stream;
 
 public class CacheNode {
 
-    private BaseModel value;
+    private volatile BaseModel value;
 
     private final Map<Class<? extends BaseModel>, Set<CacheNode>> links = new ConcurrentHashMap<>();
     private final Map<Class<? extends BaseModel>, Set<CacheNode>> backlinks = new ConcurrentHashMap<>();
@@ -29,7 +28,7 @@ public class CacheNode {
 
     public Set<CacheNode> getLinks(Class<? extends BaseModel> clazz, boolean forward) {
         var map = forward ? links : backlinks;
-        return map.computeIfAbsent(clazz, k -> new HashSet<>());
+        return map.computeIfAbsent(clazz, k -> ConcurrentHashMap.newKeySet());
     }
 
     public Stream<CacheNode> getAllLinks(boolean forward) {
