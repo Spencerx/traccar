@@ -73,14 +73,13 @@ public class B2316ProtocolDecoder extends BaseProtocolDecoder {
 
         List<Position> positions = new LinkedList<>();
         JsonArray data = root.getJsonArray("data");
-        for (int i = 0; i < data.size(); i++) {
+        for (JsonObject item : data.getValuesAs(JsonObject.class)) {
 
             Position position = new Position(getProtocolName());
             position.setDeviceId(deviceSession.getDeviceId());
 
             Network network = new Network();
 
-            JsonObject item = data.getJsonObject(i);
             Date time = new Date(item.getJsonNumber("tm").longValue() * 1000);
 
             if (item.containsKey("gp")) {

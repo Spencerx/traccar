@@ -52,8 +52,7 @@ public class FlespiProtocolDecoder extends BaseHttpProtocolDecoder {
         JsonArray result = Json.createReader(new StringReader(request.content().toString(StandardCharsets.UTF_8)))
                 .readArray();
         List<Position> positions = new LinkedList<>();
-        for (int i = 0; i < result.size(); i++) {
-            JsonObject message = result.getJsonObject(i);
+        for (JsonObject message : result.getValuesAs(JsonObject.class)) {
             JsonString identifier = message.getJsonString("ident");
             if (identifier == null) {
                 continue;

@@ -210,8 +210,7 @@ public class GlobalstarProtocolDecoder extends BaseHttpProtocolDecoder {
 
         List<Position> positions = new LinkedList<>();
 
-        for (int i = 0; i < devices.size(); i++) {
-            JsonObject data = devices.getJsonObject(i);
+        for (JsonObject data : devices.getValuesAs(JsonObject.class)) {
 
             JsonObject deviceIdentify = data.getJsonObject("deviceIdentify");
             DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, deviceIdentify.getString("esn"));

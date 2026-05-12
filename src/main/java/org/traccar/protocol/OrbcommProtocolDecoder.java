@@ -70,8 +70,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
         LinkedList<Position> positions = new LinkedList<>();
 
         JsonArray messages = json.getJsonArray("Messages");
-        for (int i = 0; i < messages.size(); i++) {
-            JsonObject message = messages.getJsonObject(i);
+        for (JsonObject message : messages.getValuesAs(JsonObject.class)) {
             DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, message.getString("MobileID"));
             if (deviceSession != null) {
 
@@ -81,8 +80,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
                 position.setDeviceTime(DateUtil.parse(DATE_FORMAT, message.getString("MessageUTC")));
 
                 JsonArray fields = message.getJsonObject("Payload").getJsonArray("Fields");
-                for (int j = 0; j < fields.size(); j++) {
-                    JsonObject field = fields.getJsonObject(j);
+                for (JsonObject field : fields.getValuesAs(JsonObject.class)) {
                     String value = field.getString("Value");
                     switch (field.getString("Name").toLowerCase(Locale.ROOT)) {
                         case "eventtime" -> position.setDeviceTime(new Date(Long.parseLong(value) * 1000));

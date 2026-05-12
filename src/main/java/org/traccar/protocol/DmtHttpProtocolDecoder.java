@@ -80,11 +80,9 @@ public class DmtHttpProtocolDecoder extends BaseHttpProtocolDecoder {
 
         JsonArray records = root.getJsonArray("Records");
 
-        for (int i = 0; i < records.size(); i++) {
+        for (JsonObject record : records.getValuesAs(JsonObject.class)) {
             Position position = new Position(getProtocolName());
             position.setDeviceId(deviceSession.getDeviceId());
-
-            JsonObject record = records.getJsonObject(i);
 
             position.set(Position.KEY_INDEX, record.getInt("SeqNo"));
             position.set(Position.KEY_EVENT, record.getInt("Reason"));
@@ -93,8 +91,7 @@ public class DmtHttpProtocolDecoder extends BaseHttpProtocolDecoder {
 
             JsonArray fields = record.getJsonArray("Fields");
 
-            for (int j = 0; j < fields.size(); j++) {
-                JsonObject field = fields.getJsonObject(j);
+            for (JsonObject field : fields.getValuesAs(JsonObject.class)) {
                 switch (field.getInt("FType")) {
                     case 0:
                         position.setFixTime(DateUtil.parse(DATE_FORMAT, field.getString("GpsUTC")));
@@ -175,8 +172,7 @@ public class DmtHttpProtocolDecoder extends BaseHttpProtocolDecoder {
 
         if (root.containsKey("analogues")) {
             JsonArray analogues = root.getJsonArray("analogues");
-            for (int i = 0; i < analogues.size(); i++) {
-                JsonObject adc = analogues.getJsonObject(i);
+            for (JsonObject adc : analogues.getValuesAs(JsonObject.class)) {
                 position.set(Position.PREFIX_ADC + adc.getInt("id"), adc.getInt("val"));
             }
         }
@@ -195,8 +191,7 @@ public class DmtHttpProtocolDecoder extends BaseHttpProtocolDecoder {
 
         if (root.containsKey("counters")) {
             JsonArray counters = root.getJsonArray("counters");
-            for (int i = 0; i < counters.size(); i++) {
-                JsonObject counter = counters.getJsonObject(i);
+            for (JsonObject counter : counters.getValuesAs(JsonObject.class)) {
                 switch (counter.getInt("id")) {
                     case 0 -> position.set(Position.KEY_BATTERY, counter.getInt("val") * 0.001);
                     case 1 -> position.set(Position.KEY_BATTERY_LEVEL, counter.getInt("val") * 0.01);
