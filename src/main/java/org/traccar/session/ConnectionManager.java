@@ -109,8 +109,8 @@ public class ConnectionManager implements BroadcastInterface {
             String... uniqueIds) throws Exception {
 
         ConnectionKey connectionKey = new ConnectionKey(channel, remoteAddress);
-        Map<String, DeviceSession> endpointSessions = sessionsByEndpoint.getOrDefault(
-                connectionKey, new ConcurrentHashMap<>());
+        Map<String, DeviceSession> endpointSessions = sessionsByEndpoint.computeIfAbsent(
+                connectionKey, k -> new ConcurrentHashMap<>());
 
         uniqueIds = Arrays.stream(uniqueIds).filter(Objects::nonNull).toArray(String[]::new);
         if (uniqueIds.length > 0) {
@@ -150,7 +150,6 @@ public class ConnectionManager implements BroadcastInterface {
             DeviceSession deviceSession = new DeviceSession(
                     device.getId(), device.getUniqueId(), device.getModel(), protocol, channel, remoteAddress);
             endpointSessions.put(device.getUniqueId(), deviceSession);
-            sessionsByEndpoint.put(connectionKey, endpointSessions);
             sessionsByDeviceId.put(device.getId(), deviceSession);
 
             if (oldSession == null) {
