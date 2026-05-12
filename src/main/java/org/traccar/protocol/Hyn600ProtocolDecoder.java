@@ -99,7 +99,7 @@ public class Hyn600ProtocolDecoder extends BaseProtocolDecoder {
                             .setHour(buf.readUnsignedByte())
                             .setMinute(buf.readUnsignedByte())
                             .setSecond(buf.readUnsignedByte());
-                    position.setFixTime(dateBuilder.getDate());
+                    position.setTime(dateBuilder.getDate());
                 }
                 if (BitUtil.check(locationMask, 8)) {
                     int satelliteMask = buf.readUnsignedByte();
