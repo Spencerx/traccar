@@ -322,22 +322,17 @@ public class TeltonikaProtocolDecoder extends BaseProtocolDecoder {
     private void decodeParameter(Position position, int id, ByteBuf buf, int length, int codec, String model) {
         if (codec == CODEC_GH3000) {
             decodeGh3000Parameter(position, id, buf, length);
-        } else {
-            int index = buf.readerIndex();
-            boolean decoded = false;
-            for (var entry : PARAMETERS.getOrDefault(id, Map.of()).entrySet()) {
-                if (entry.getKey().test(model)) {
-                    entry.getValue().accept(position, buf);
-                    decoded = true;
-                    break;
-                }
-            }
-            if (decoded) {
+            return;
+        }
+        int index = buf.readerIndex();
+        for (var entry : PARAMETERS.getOrDefault(id, Map.of()).entrySet()) {
+            if (entry.getKey().test(model)) {
+                entry.getValue().accept(position, buf);
                 buf.readerIndex(index + length);
-            } else {
-                position.set(Position.PREFIX_IO + id, readValue(buf, length));
+                return;
             }
         }
+        position.set(Position.PREFIX_IO + id, readValue(buf, length));
     }
 
     private void decodeCell(
@@ -387,18 +382,12 @@ public class TeltonikaProtocolDecoder extends BaseProtocolDecoder {
     }
 
     private int readExtByte(ByteBuf buf, int codec, int... codecs) {
-        boolean ext = false;
         for (int c : codecs) {
             if (codec == c) {
-                ext = true;
-                break;
+                return buf.readUnsignedShort();
             }
         }
-        if (ext) {
-            return buf.readUnsignedShort();
-        } else {
-            return buf.readUnsignedByte();
-        }
+        return buf.readUnsignedByte();
     }
 
     private void decodeLocation(Position position, ByteBuf buf, int codec, String model) {
