@@ -121,8 +121,7 @@ public class AplicomProtocolDecoder extends BaseProtocolDecoder {
             values.add(buf.readSlice(8));
         }
 
-        for (int i = 0; i < count; i++) {
-            ByteBuf value = values.get(i);
+        for (ByteBuf value : values) {
             switch (buf.readInt()) {
                 case 0x20D -> {
                     position.set(Position.KEY_RPM, value.readShortLE());
