@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 - 2024 Anton Tananaev (anton@traccar.org)
+ * Copyright 2016 - 2026 Anton Tananaev (anton@traccar.org)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,13 +68,11 @@ public class AstraProtocolDecoder extends BaseProtocolDecoder {
     }
 
     private String readImei(ByteBuf buf) {
-        return String.format("%08d", buf.readUnsignedInt()) + String.format("%07d", buf.readUnsignedMedium());
+        return String.format("%08d%07d", buf.readUnsignedInt(), buf.readUnsignedMedium());
     }
 
     private Date readTime(ByteBuf buf) {
-        DateBuilder dateBuilder = new DateBuilder()
-                .setDate(1980, 1, 6).addMillis(buf.readUnsignedInt() * 1000L);
-        return dateBuilder.getDate();
+        return new DateBuilder().setDate(1980, 1, 6).addMillis(buf.readUnsignedInt() * 1000L).getDate();
     }
 
     private Object decodeK(Channel channel, SocketAddress remoteAddress, ByteBuf buf) {
