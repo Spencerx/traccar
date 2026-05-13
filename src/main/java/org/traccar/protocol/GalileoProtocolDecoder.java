@@ -413,10 +413,6 @@ public class GalileoProtocolDecoder extends BaseProtocolDecoder {
 
         sendResponse(channel, 0x02, buf.readUnsignedShortLE());
 
-        for (Position p : positions) {
-            p.setDeviceId(deviceSession.getDeviceId());
-        }
-
         return positions.isEmpty() ? null : positions;
     }
 

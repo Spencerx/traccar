@@ -143,19 +143,11 @@ public class BlackKiteProtocolDecoder extends BaseProtocolDecoder {
                     break;
 
                 case TAG_INPUT_VOLTAGE1:
-                    position.set(Position.PREFIX_ADC + 1, buf.readUnsignedShortLE() / 1000.0);
-                    break;
-
                 case TAG_INPUT_VOLTAGE2:
-                    position.set(Position.PREFIX_ADC + 2, buf.readUnsignedShortLE() / 1000.0);
-                    break;
-
                 case TAG_INPUT_VOLTAGE3:
-                    position.set(Position.PREFIX_ADC + 3, buf.readUnsignedShortLE() / 1000.0);
-                    break;
-
                 case TAG_INPUT_VOLTAGE4:
-                    position.set(Position.PREFIX_ADC + 4, buf.readUnsignedShortLE() / 1000.0);
+                    position.set(
+                            Position.PREFIX_ADC + (tag - TAG_INPUT_VOLTAGE1 + 1), buf.readUnsignedShortLE() / 1000.0);
                     break;
 
                 case TAG_XT1:
