@@ -176,6 +176,7 @@ public class NavtelecomProtocolDecoder extends BaseProtocolDecoder {
 
                 Position position = new Position(getProtocolName());
                 position.setDeviceId(deviceSession.getDeviceId());
+                getLastLocation(position, null);
                 position.set(Position.KEY_RESULT, buf.readCharSequence(length, StandardCharsets.US_ASCII).toString());
                 return position;
 
