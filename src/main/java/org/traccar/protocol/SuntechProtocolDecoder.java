@@ -636,6 +636,15 @@ public class SuntechProtocolDecoder extends BaseProtocolDecoder {
                 }
             }
 
+            int assignIndex = 1;
+            while (index < values.length) {
+                String value = values[index++];
+                if (!value.isEmpty()) {
+                    position.set("assign" + assignIndex, value);
+                }
+                assignIndex++;
+            }
+
         }
 
         return position;
