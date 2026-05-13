@@ -103,8 +103,8 @@ public class SiwiProtocolDecoder extends BaseProtocolDecoder {
 
         position.setTime(parser.nextDateTime(Parser.DateTimeFormat.HMS_DMY, "IST"));
 
-        position.set(Position.KEY_BATTERY, parser.nextInt() * 0.001);
-        position.set(Position.PREFIX_ADC + 1, parser.nextInt() * 0.01);
+        position.set(Position.KEY_BATTERY, parser.nextInt() / 1000.0);
+        position.set(Position.PREFIX_ADC + 1, parser.nextInt() / 100.0);
         position.set(Position.KEY_INPUT, parser.nextInt());
 
         for (int i = 1; i <= 4; i++) {

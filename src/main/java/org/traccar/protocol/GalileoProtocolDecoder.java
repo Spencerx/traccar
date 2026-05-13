@@ -145,11 +145,11 @@ public class GalileoProtocolDecoder extends BaseProtocolDecoder {
             case 0x10 -> position.set(Position.KEY_INDEX, buf.readUnsignedShortLE());
             case 0x20 -> position.setTime(new Date(buf.readUnsignedIntLE() * 1000));
             case 0x33 -> {
-                position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedShortLE() * 0.1));
-                position.setCourse(buf.readUnsignedShortLE() * 0.1);
+                position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedShortLE() / 10.0));
+                position.setCourse(buf.readUnsignedShortLE() / 10.0);
             }
             case 0x34 -> position.setAltitude(buf.readShortLE());
-            case 0x35 -> position.set(Position.KEY_HDOP, buf.readUnsignedByte() * 0.1);
+            case 0x35 -> position.set(Position.KEY_HDOP, buf.readUnsignedByte() / 10.0);
             case 0x40 -> position.set(Position.KEY_STATUS, buf.readUnsignedShortLE());
             case 0x41 -> position.set(Position.KEY_POWER, buf.readUnsignedShortLE() / 1000.0);
             case 0x42 -> position.set(Position.KEY_BATTERY, buf.readUnsignedShortLE() / 1000.0);

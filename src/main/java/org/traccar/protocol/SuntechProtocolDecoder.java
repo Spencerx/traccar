@@ -894,10 +894,10 @@ public class SuntechProtocolDecoder extends BaseProtocolDecoder {
 
                 position.setValid(true);
                 position.setTime(time);
-                position.setLatitude(crash.readIntLE() * 0.0000001);
-                position.setLongitude(crash.readIntLE() * 0.0000001);
-                position.setSpeed(UnitsConverter.knotsFromKph(crash.readUnsignedShort() * 0.01));
-                position.setCourse(crash.readUnsignedShort() * 0.01);
+                position.setLatitude(crash.readIntLE() / 10000000.0);
+                position.setLongitude(crash.readIntLE() / 10000000.0);
+                position.setSpeed(UnitsConverter.knotsFromKph(crash.readUnsignedShort() / 100.0));
+                position.setCourse(crash.readUnsignedShort() / 100.0);
 
                 StringBuilder value = new StringBuilder("[");
                 for (int i = 0; i < 100; i++) {

@@ -113,7 +113,7 @@ public class CastelProtocolDecoder extends BaseProtocolDecoder {
         double lat = buf.readUnsignedIntLE() / 3600000.0;
         double lon = buf.readUnsignedIntLE() / 3600000.0;
         position.setSpeed(UnitsConverter.knotsFromCps(buf.readUnsignedShortLE()));
-        position.setCourse(buf.readUnsignedShortLE() * 0.1);
+        position.setCourse(buf.readUnsignedShortLE() / 10.0);
 
         int flags = buf.readUnsignedByte();
         if ((flags & 0x02) == 0) {

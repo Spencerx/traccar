@@ -112,7 +112,7 @@ public class BlackKiteProtocolDecoder extends BaseProtocolDecoder {
 
                 case TAG_SPEED_COURSE:
                     position.setSpeed(buf.readUnsignedShortLE() * 0.0539957);
-                    position.setCourse(buf.readUnsignedShortLE() * 0.1);
+                    position.setCourse(buf.readUnsignedShortLE() / 10.0);
                     break;
 
                 case TAG_ALTITUDE:

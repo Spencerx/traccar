@@ -530,7 +530,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
             position.set(Position.KEY_CHARGE, BitUtil.check(status, 2));
 
             if (buf.readableBytes() >= 2 + 6) {
-                position.set(Position.KEY_BATTERY, buf.readUnsignedShort() * 0.01);
+                position.set(Position.KEY_BATTERY, buf.readUnsignedShort() / 100.0);
             }
             if (buf.readableBytes() >= 1 + 6) {
                 position.set(Position.KEY_RSSI, buf.readUnsignedByte());
@@ -584,8 +584,8 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
                 position.set(Position.KEY_DRIVER_UNIQUE_ID, String.valueOf(driverId));
             }
 
-            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() * 0.01);
-            position.set(Position.KEY_POWER, buf.readUnsignedShort() * 0.01);
+            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() / 100.0);
+            position.set(Position.KEY_POWER, buf.readUnsignedShort() / 100.0);
 
             long portInfo = buf.readUnsignedInt();
 
@@ -593,7 +593,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
             position.set(Position.KEY_OUTPUT, buf.readUnsignedByte());
 
             for (int i = 1; i <= BitUtil.between(portInfo, 20, 24); i++) {
-                position.set(Position.PREFIX_ADC + i, buf.readUnsignedShort() * 0.01);
+                position.set(Position.PREFIX_ADC + i, buf.readUnsignedShort() / 100.0);
             }
 
             return position;
@@ -681,7 +681,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
 
             getLastLocation(position, null);
 
-            position.set(Position.KEY_POWER, buf.readShort() * 0.01);
+            position.set(Position.KEY_POWER, buf.readShort() / 100.0);
 
             return position;
 
@@ -692,8 +692,8 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
             decodeLbs(position, buf, type, false);
 
             position.set(Position.KEY_IGNITION, buf.readUnsignedByte() > 0);
-            position.set(Position.KEY_POWER, buf.readUnsignedShort() * 0.01);
-            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() * 0.01);
+            position.set(Position.KEY_POWER, buf.readUnsignedShort() / 100.0);
+            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() / 100.0);
 
             return position;
 
@@ -775,12 +775,12 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
             position.set("absoluteCapacity", buf.readUnsignedByte());
             position.set("fullCapacity", buf.readUnsignedShort());
             position.set("batteryHealth", buf.readUnsignedByte());
-            position.set("batteryTemp", buf.readUnsignedShort() * 0.1 - 273.1);
+            position.set("batteryTemp", buf.readUnsignedShort() / 10.0 - 273.1);
             position.set("current", buf.readUnsignedShort());
-            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() * 0.001);
+            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() / 1000.0);
             position.set("cycleIndex", buf.readUnsignedShort());
             for (int i = 1; i <= 14; i++) {
-                position.set("batteryCell" + i, buf.readUnsignedShort() * 0.001);
+                position.set("batteryCell" + i, buf.readUnsignedShort() / 1000.0);
             }
             position.set("currentChargeInterval", buf.readUnsignedShort());
             position.set("maxChargeInterval", buf.readUnsignedShort());
@@ -814,7 +814,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
             buf.readUnsignedShort(); // working time
 
             int value = buf.readUnsignedShort();
-            double temperature = BitUtil.to(value, 15) * 0.1;
+            double temperature = BitUtil.to(value, 15) / 10.0;
             position.set(Position.PREFIX_TEMP + 1, BitUtil.check(value, 15) ? temperature : -temperature);
 
         } else if (type == MSG_IBUTTON) {
@@ -883,10 +883,10 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
                 } else {
                     if (type == MSG_GPS_LBS_STATUS_5
                             || (modelNT && (type == MSG_GPS_LBS_2 || type == MSG_GPS_LBS_DRIVER))) {
-                        position.set(Position.KEY_POWER, buf.readUnsignedShort() * 0.01);
+                        position.set(Position.KEY_POWER, buf.readUnsignedShort() / 100.0);
                     }
                     if (type == MSG_STATUS && "R11".equals(model)) {
-                        position.set(Position.KEY_POWER, buf.readUnsignedShort() * 0.01);
+                        position.set(Position.KEY_POWER, buf.readUnsignedShort() / 100.0);
                     } else {
                         int battery = buf.readUnsignedByte();
                         if (modelNT && (type == MSG_GPS_LBS_2 || type == MSG_GPS_LBS_DRIVER)) {
@@ -962,17 +962,17 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
                         if (BitUtil.check(mask, 8 + 5)) {
                             position.set(Position.PREFIX_ADC + 1, value);
                         } else {
-                            position.set(Position.PREFIX_ADC + 1, value * 0.1);
+                            position.set(Position.PREFIX_ADC + 1, value / 10.0);
                         }
                     }
                 } else if (variant == Variant.VXT01) {
                     decodeStatus(position, buf);
-                    position.set(Position.KEY_POWER, buf.readUnsignedShort() * 0.01);
+                    position.set(Position.KEY_POWER, buf.readUnsignedShort() / 100.0);
                     position.set(Position.KEY_RSSI, buf.readUnsignedByte());
                     buf.readUnsignedByte(); // alarm extension
                 } else if (variant == Variant.S5) {
                     decodeStatus(position, buf);
-                    position.set(Position.KEY_POWER, buf.readUnsignedShort() * 0.01);
+                    position.set(Position.KEY_POWER, buf.readUnsignedShort() / 100.0);
                     position.set(Position.KEY_RSSI, buf.readUnsignedByte());
                     position.addAlarm(decodeAlarm(buf.readUnsignedByte(), modelLW, modelSW, modelVL));
                     position.set("oil", buf.readUnsignedShort());
@@ -1002,8 +1002,8 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
                 if (BitUtil.check(temperature, 15)) {
                     temperature = -BitUtil.to(temperature, 15);
                 }
-                position.set(Position.PREFIX_TEMP + 1, temperature * 0.01);
-                position.set(Position.KEY_HUMIDITY, buf.readUnsignedShort() * 0.01);
+                position.set(Position.PREFIX_TEMP + 1, temperature / 100.0);
+                position.set(Position.KEY_HUMIDITY, buf.readUnsignedShort() / 100.0);
             }
 
             if (type == MSG_GPS_LBS_STATUS_4 && variant == Variant.SL4X) {
@@ -1027,9 +1027,9 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
                 int module = buf.readUnsignedShort();
                 int subLength = buf.readUnsignedByte();
                 switch (module) {
-                    case 0x0027 -> position.set(Position.KEY_POWER, buf.readUnsignedShort() * 0.01);
+                    case 0x0027 -> position.set(Position.KEY_POWER, buf.readUnsignedShort() / 100.0);
                     case 0x002E -> position.set(Position.KEY_ODOMETER, buf.readUnsignedInt());
-                    case 0x003B -> position.setAccuracy(buf.readUnsignedShort() * 0.01);
+                    case 0x003B -> position.setAccuracy(buf.readUnsignedShort() / 100.0);
                     default -> buf.skipBytes(subLength);
                 }
             }
@@ -1083,7 +1083,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
                 getLastLocation(position, decodeDate(buf, deviceSession));
             }
             if (variant == Variant.JC400) {
-                position.set(Position.KEY_POWER, buf.readUnsignedShort() * 0.1);
+                position.set(Position.KEY_POWER, buf.readUnsignedShort() / 10.0);
             }
             short event = buf.readUnsignedByte();
             position.set(Position.KEY_EVENT, event);
@@ -1181,7 +1181,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
 
             if (subType == 0x00) {
 
-                position.set(Position.PREFIX_ADC + 1, buf.readUnsignedShort() * 0.01);
+                position.set(Position.PREFIX_ADC + 1, buf.readUnsignedShort() / 100.0);
                 return position;
 
             } else if (subType == 0x04) {
@@ -1334,13 +1334,13 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
                 String[] values = pair.split("=");
                 if (values.length >= 2) {
                     switch (Integer.parseInt(values[0].substring(0, 2), 16)) {
-                        case 40 -> position.set(Position.KEY_ODOMETER, Integer.parseInt(values[1], 16) * 0.01);
-                        case 43 -> position.set(Position.KEY_FUEL, Integer.parseInt(values[1], 16) * 0.01);
-                        case 45 -> position.set(Position.KEY_COOLANT_TEMP, Integer.parseInt(values[1], 16) * 0.01);
-                        case 53 -> position.set(Position.KEY_OBD_SPEED, Integer.parseInt(values[1], 16) * 0.01);
-                        case 54 -> position.set(Position.KEY_RPM, Integer.parseInt(values[1], 16) * 0.01);
-                        case 71 -> position.set(Position.KEY_FUEL_USED, Integer.parseInt(values[1], 16) * 0.01);
-                        case 73 -> position.set(Position.KEY_HOURS, Integer.parseInt(values[1], 16) * 0.01);
+                        case 40 -> position.set(Position.KEY_ODOMETER, Integer.parseInt(values[1], 16) / 100.0);
+                        case 43 -> position.set(Position.KEY_FUEL, Integer.parseInt(values[1], 16) / 100.0);
+                        case 45 -> position.set(Position.KEY_COOLANT_TEMP, Integer.parseInt(values[1], 16) / 100.0);
+                        case 53 -> position.set(Position.KEY_OBD_SPEED, Integer.parseInt(values[1], 16) / 100.0);
+                        case 54 -> position.set(Position.KEY_RPM, Integer.parseInt(values[1], 16) / 100.0);
+                        case 71 -> position.set(Position.KEY_FUEL_USED, Integer.parseInt(values[1], 16) / 100.0);
+                        case 73 -> position.set(Position.KEY_HOURS, Integer.parseInt(values[1], 16) / 100.0);
                         case 74 -> position.set(Position.KEY_VIN, values[1]);
                     }
                 }
@@ -1369,8 +1369,8 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
                             position.setNetwork(new Network(cellTower));
                         }
                     }
-                    case 0x18 -> position.set(Position.KEY_BATTERY, buf.readUnsignedShort() * 0.01);
-                    case 0x28 -> position.set(Position.KEY_HDOP, buf.readUnsignedByte() * 0.1);
+                    case 0x18 -> position.set(Position.KEY_BATTERY, buf.readUnsignedShort() / 100.0);
+                    case 0x28 -> position.set(Position.KEY_HDOP, buf.readUnsignedByte() / 10.0);
                     case 0x29 -> position.set(Position.KEY_INDEX, buf.readUnsignedInt());
                     case 0x2a -> {
                         int input = buf.readUnsignedByte();

@@ -221,13 +221,13 @@ public class LaipacProtocolDecoder extends BaseProtocolDecoder {
         String event = parser.next();
         position.addAlarm(decodeAlarm(event));
         position.set(Position.KEY_EVENT, decodeEvent(event, position, model));
-        position.set(Position.KEY_BATTERY, Double.parseDouble(parser.next().replaceAll("\\.", "")) * 0.001);
+        position.set(Position.KEY_BATTERY, Double.parseDouble(parser.next().replaceAll("\\.", "")) / 1000.0);
         position.set(Position.KEY_ODOMETER, parser.nextDouble() * 1000);
         position.set(Position.KEY_GPS, parser.nextInt());
-        position.set(Position.PREFIX_ADC + 1, parser.nextDouble() * 0.001);
+        position.set(Position.PREFIX_ADC + 1, parser.nextDouble() / 1000.0);
 
         if ("AVL110".equals(model) || "AVL120".equals(model)) {
-            position.set(Position.PREFIX_ADC + 2, parser.nextDouble() * 0.001);
+            position.set(Position.PREFIX_ADC + 2, parser.nextDouble() / 1000.0);
         } else {
             parser.next();
         }

@@ -106,11 +106,11 @@ public class TzoneProtocolDecoder extends BaseProtocolDecoder {
 
         if (hardware == 0x413) {
 
-            position.set(Position.KEY_HDOP, buf.readUnsignedShort() * 0.1);
+            position.set(Position.KEY_HDOP, buf.readUnsignedShort() / 10.0);
 
             position.setAltitude(buf.readUnsignedShort());
             position.setCourse(buf.readUnsignedShort());
-            position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedShort() * 0.1));
+            position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedShort() / 10.0));
 
             position.set(Position.KEY_SATELLITES, buf.readUnsignedByte());
 
@@ -120,7 +120,7 @@ public class TzoneProtocolDecoder extends BaseProtocolDecoder {
                     .setDate(buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte())
                     .setTime(buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte()).getDate());
 
-            position.setSpeed(buf.readUnsignedShort() * 0.01);
+            position.setSpeed(buf.readUnsignedShort() / 100.0);
 
             position.set(Position.KEY_ODOMETER, buf.readUnsignedMedium());
 
@@ -214,7 +214,7 @@ public class TzoneProtocolDecoder extends BaseProtocolDecoder {
                     buf.readUnsignedByte(); // status
                     buf.readUnsignedShortLE(); // battery voltage
 
-                    position.set(Position.PREFIX_TEMP + i, (buf.readShortLE() & 0x3fff) * 0.1);
+                    position.set(Position.PREFIX_TEMP + i, (buf.readShortLE() & 0x3fff) / 10.0);
 
                     buf.readUnsignedByte(); // humidity
                     buf.readUnsignedByte(); // rssi
@@ -326,7 +326,7 @@ public class TzoneProtocolDecoder extends BaseProtocolDecoder {
 
             position.set(Position.KEY_RSSI, buf.readUnsignedByte());
             position.set("gsmStatus", buf.readUnsignedByte());
-            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() * 0.01);
+            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() / 100.0);
 
             if (hardware != 0x407) {
                 position.set(Position.KEY_POWER, buf.readUnsignedShort());
@@ -335,12 +335,12 @@ public class TzoneProtocolDecoder extends BaseProtocolDecoder {
             } else {
                 int temperature = buf.readUnsignedShort();
                 if (!BitUtil.check(temperature, 15)) {
-                    double value = BitUtil.to(temperature, 14) * 0.1;
+                    double value = BitUtil.to(temperature, 14) / 10.0;
                     position.set(Position.PREFIX_TEMP + 1, BitUtil.check(temperature, 14) ? -value : value);
                 }
                 int humidity = buf.readUnsignedShort();
                 if (!BitUtil.check(humidity, 15)) {
-                    position.set(Position.KEY_HUMIDITY, BitUtil.to(humidity, 15) * 0.1);
+                    position.set(Position.KEY_HUMIDITY, BitUtil.to(humidity, 15) / 10.0);
                 }
                 position.set("lightSensor", buf.readUnsignedByte() == 0);
             }

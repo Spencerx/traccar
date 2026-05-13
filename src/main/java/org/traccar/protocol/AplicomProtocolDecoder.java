@@ -125,35 +125,35 @@ public class AplicomProtocolDecoder extends BaseProtocolDecoder {
             switch (buf.readInt()) {
                 case 0x20D -> {
                     position.set(Position.KEY_RPM, value.readShortLE());
-                    position.set("dieselTemperature", value.readShortLE() * 0.1);
-                    position.set("batteryVoltage", value.readShortLE() * 0.01);
-                    position.set("supplyAirTempDep1", value.readShortLE() * 0.1);
+                    position.set("dieselTemperature", value.readShortLE() / 10.0);
+                    position.set("batteryVoltage", value.readShortLE() / 100.0);
+                    position.set("supplyAirTempDep1", value.readShortLE() / 10.0);
                 }
                 case 0x30D -> position.set("activeAlarm", ByteBufUtil.hexDump(value));
                 case 0x40C -> {
-                    position.set("airTempDep1", value.readShortLE() * 0.1);
-                    position.set("airTempDep2", value.readShortLE() * 0.1);
+                    position.set("airTempDep1", value.readShortLE() / 10.0);
+                    position.set("airTempDep2", value.readShortLE() / 10.0);
                 }
                 case 0x40D -> position.set("coldUnitState", ByteBufUtil.hexDump(value));
                 case 0x50C -> {
-                    position.set("defrostTempDep1", value.readShortLE() * 0.1);
-                    position.set("defrostTempDep2", value.readShortLE() * 0.1);
+                    position.set("defrostTempDep1", value.readShortLE() / 10.0);
+                    position.set("defrostTempDep2", value.readShortLE() / 10.0);
                 }
                 case 0x50D -> {
-                    position.set("condenserPressure", value.readShortLE() * 0.1);
-                    position.set("suctionPressure", value.readShortLE() * 0.1);
+                    position.set("condenserPressure", value.readShortLE() / 10.0);
+                    position.set("suctionPressure", value.readShortLE() / 10.0);
                 }
                 case 0x58C -> {
                     value.readByte();
                     value.readShort(); // index
                     switch (value.readByte()) {
-                        case 0x01 -> position.set("setpointZone1", value.readIntLE() * 0.1);
-                        case 0x02 -> position.set("setpointZone2", value.readIntLE() * 0.1);
+                        case 0x01 -> position.set("setpointZone1", value.readIntLE() / 10.0);
+                        case 0x02 -> position.set("setpointZone2", value.readIntLE() / 10.0);
                         case 0x05 -> position.set("unitType", value.readIntLE());
                         case 0x13 -> position.set("dieselHours", value.readIntLE() / 60 / 60);
                         case 0x14 -> position.set("electricHours", value.readIntLE() / 60 / 60);
                         case 0x17 -> position.set("serviceIndicator", value.readIntLE());
-                        case 0x18 -> position.set("softwareVersion", value.readIntLE() * 0.01);
+                        case 0x18 -> position.set("softwareVersion", value.readIntLE() / 100.0);
                         default -> {
                         }
                     }
@@ -203,8 +203,8 @@ public class AplicomProtocolDecoder extends BaseProtocolDecoder {
         }
 
         if ((selector & 0x8000) != 0) {
-            position.set(Position.KEY_POWER, buf.readUnsignedShort() * 0.001);
-            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() * 0.001);
+            position.set(Position.KEY_POWER, buf.readUnsignedShort() / 1000.0);
+            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() / 1000.0);
         }
 
         // Pulse rate 1
@@ -306,7 +306,7 @@ public class AplicomProtocolDecoder extends BaseProtocolDecoder {
         }
 
         if ((selector & 0x8000) != 0) {
-            position.set("kFactor", buf.readUnsignedShort() * 0.001 + " pulses/m");
+            position.set("kFactor", buf.readUnsignedShort() / 1000.0 + " pulses/m");
         }
 
         if ((selector & 0x0200) != 0) {
@@ -540,7 +540,7 @@ public class AplicomProtocolDecoder extends BaseProtocolDecoder {
         }
 
         if ((selector & 0x0800) != 0) {
-            position.set(Position.KEY_HOURS, buf.readUnsignedInt() * 0.05);
+            position.set(Position.KEY_HOURS, buf.readUnsignedInt() / 20.0);
             position.set(Position.KEY_RPM, buf.readUnsignedShort() * 0.125);
             position.set(Position.KEY_OBD_SPEED, buf.readUnsignedShort() / 256.0);
             position.set(Position.KEY_FUEL_USED, buf.readUnsignedInt() * 0.5);
@@ -551,7 +551,7 @@ public class AplicomProtocolDecoder extends BaseProtocolDecoder {
             position.set("ambientTemperature", buf.readUnsignedShort() * 0.03125 - 273);
             buf.readUnsignedShort(); // fuel rate
             position.set("fuelEconomy", buf.readUnsignedShort() / 512.0);
-            position.set(Position.KEY_FUEL_CONSUMPTION, buf.readUnsignedInt() * 0.001);
+            position.set(Position.KEY_FUEL_CONSUMPTION, buf.readUnsignedInt() / 1000.0);
             buf.readUnsignedByte(); // pto drive engagement
         }
 

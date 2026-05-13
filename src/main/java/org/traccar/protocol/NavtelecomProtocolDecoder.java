@@ -233,13 +233,13 @@ public class NavtelecomProtocolDecoder extends BaseProtocolDecoder {
                                     position.setFixTime(new Date(buf.readUnsignedIntLE() * 1000));
                                     break;
                                 case 10:
-                                    position.setLatitude(buf.readIntLE() * 0.0001 / 60);
+                                    position.setLatitude(buf.readIntLE() / 10000.0 / 60);
                                     break;
                                 case 11:
-                                    position.setLongitude(buf.readIntLE() * 0.0001 / 60);
+                                    position.setLongitude(buf.readIntLE() / 10000.0 / 60);
                                     break;
                                 case 12:
-                                    position.setAltitude(buf.readIntLE() * 0.1);
+                                    position.setAltitude(buf.readIntLE() / 10.0);
                                     break;
                                 case 13:
                                     position.setSpeed(UnitsConverter.knotsFromKph(buf.readFloatLE()));
@@ -251,10 +251,10 @@ public class NavtelecomProtocolDecoder extends BaseProtocolDecoder {
                                     position.set(Position.KEY_ODOMETER, buf.readFloatLE() * 1000);
                                     break;
                                 case 19:
-                                    position.set(Position.KEY_POWER, buf.readShortLE() * 0.001);
+                                    position.set(Position.KEY_POWER, buf.readShortLE() / 1000.0);
                                     break;
                                 case 20:
-                                    position.set(Position.KEY_BATTERY, buf.readShortLE() * 0.001);
+                                    position.set(Position.KEY_BATTERY, buf.readShortLE() / 1000.0);
                                     break;
                                 case 21:
                                 case 22:
@@ -262,7 +262,8 @@ public class NavtelecomProtocolDecoder extends BaseProtocolDecoder {
                                 case 24:
                                 case 25:
                                 case 26:
-                                    position.set(Position.PREFIX_ADC + (j + 1 - 21), buf.readUnsignedShortLE() * 0.001);
+                                    position.set(
+                                            Position.PREFIX_ADC + (j + 1 - 21), buf.readUnsignedShortLE() / 1000.0);
                                     break;
                                 case 29:
                                     value = buf.readUnsignedByte();
@@ -319,7 +320,7 @@ public class NavtelecomProtocolDecoder extends BaseProtocolDecoder {
                                         if (BitUtil.check(value, 15)) {
                                             position.set("obdFuelLevel", BitUtil.to(value, 14));
                                         } else {
-                                            position.set("obdFuel", BitUtil.to(value, 14) * 0.1);
+                                            position.set("obdFuel", BitUtil.to(value, 14) / 10.0);
                                         }
                                     }
                                     break;
@@ -364,7 +365,7 @@ public class NavtelecomProtocolDecoder extends BaseProtocolDecoder {
                                         if (BitUtil.check(value, 15)) {
                                             position.set("obdAdBlueLevel", BitUtil.to(value, 14));
                                         } else {
-                                            position.set("obdAdBlue", BitUtil.to(value, 14) * 0.1);
+                                            position.set("obdAdBlue", BitUtil.to(value, 14) / 10.0);
                                         }
                                     }
                                     break;
@@ -396,7 +397,7 @@ public class NavtelecomProtocolDecoder extends BaseProtocolDecoder {
                                     value = buf.readShortLE();
                                     position.set(
                                             Position.PREFIX_TEMP + (j + 1 + 8 - 163),
-                                            (value != (short) 0x8000) ? value * 0.05 : null);
+                                            (value != (short) 0x8000) ? value / 20.0 : null);
                                     break;
                                 case 167:
                                 case 168:

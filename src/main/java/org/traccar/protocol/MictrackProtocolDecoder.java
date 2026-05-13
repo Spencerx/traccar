@@ -87,7 +87,7 @@ public class MictrackProtocolDecoder extends BaseProtocolDecoder {
         int event = Integer.parseInt(values[index++]);
         position.addAlarm(decodeAlarm(event));
         position.set(Position.KEY_EVENT, event);
-        position.set(Position.KEY_BATTERY, Integer.parseInt(values[index++]) * 0.001);
+        position.set(Position.KEY_BATTERY, Integer.parseInt(values[index++]) / 1000.0);
     }
 
     private void decodeCell(Network network, String data) {
@@ -134,7 +134,7 @@ public class MictrackProtocolDecoder extends BaseProtocolDecoder {
         int event = Integer.parseInt(values[index++]);
         position.addAlarm(decodeAlarm(event));
         position.set(Position.KEY_EVENT, event);
-        position.set(Position.KEY_BATTERY, Integer.parseInt(values[index++]) * 0.001);
+        position.set(Position.KEY_BATTERY, Integer.parseInt(values[index++]) / 1000.0);
     }
 
     private void decodeStatus(Position position, String data) {
@@ -150,7 +150,7 @@ public class MictrackProtocolDecoder extends BaseProtocolDecoder {
         int event = Integer.parseInt(values[index++]);
         position.addAlarm(decodeAlarm(event));
         position.set(Position.KEY_EVENT, event);
-        position.set(Position.KEY_BATTERY, Integer.parseInt(values[index++]) * 0.001);
+        position.set(Position.KEY_BATTERY, Integer.parseInt(values[index++]) / 1000.0);
     }
 
     @Override

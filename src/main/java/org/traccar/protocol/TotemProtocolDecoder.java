@@ -312,7 +312,7 @@ public class TotemProtocolDecoder extends BaseProtocolDecoder {
             position.set(Position.PREFIX_IN + 2, BitUtil.check(io, 7));
             position.set(Position.PREFIX_OUT + 1, BitUtil.check(io, 8));
             position.set(Position.PREFIX_OUT + 2, BitUtil.check(io, 9));
-            position.set(Position.KEY_BATTERY, parser.nextDouble(0) * 0.01);
+            position.set(Position.KEY_BATTERY, parser.nextDouble(0) / 100.0);
         } else {
             position.set(Position.KEY_ANTENNA, BitUtil.check(io, 0));
             position.set(Position.KEY_CHARGE, BitUtil.check(io, 1));
@@ -322,7 +322,7 @@ public class TotemProtocolDecoder extends BaseProtocolDecoder {
             for (int i = 1; i <= 4; i++) {
                 position.set(Position.PREFIX_OUT + i, BitUtil.check(io, 7 + i));
             }
-            position.set(Position.KEY_BATTERY, parser.nextDouble(0) * 0.1);
+            position.set(Position.KEY_BATTERY, parser.nextDouble(0) / 10.0);
         }
 
         position.set(Position.KEY_POWER, parser.nextDouble(0));
@@ -362,7 +362,7 @@ public class TotemProtocolDecoder extends BaseProtocolDecoder {
         position.setTime(parser.nextDateTime(Parser.DateTimeFormat.DMY_HMS));
 
         position.set(Position.PREFIX_IO + 1, parser.next());
-        position.set(Position.KEY_BATTERY, parser.nextDouble(0) * 0.1);
+        position.set(Position.KEY_BATTERY, parser.nextDouble(0) / 10.0);
         position.set(Position.KEY_POWER, parser.nextDouble(0));
         position.set(Position.PREFIX_ADC + 1, parser.next());
         position.set(Position.PREFIX_ADC + 2, parser.next());
@@ -430,11 +430,11 @@ public class TotemProtocolDecoder extends BaseProtocolDecoder {
         position.setTime(parser.nextDateTime());
 
         if (parser.hasNext(2)) {
-            position.set(Position.KEY_BATTERY, parser.nextDouble() * 0.1);
+            position.set(Position.KEY_BATTERY, parser.nextDouble() / 10.0);
             position.set(Position.KEY_POWER, parser.nextDouble());
         }
         if (parser.hasNext()) {
-            position.set(Position.KEY_BATTERY, parser.nextDouble() * 0.01);
+            position.set(Position.KEY_BATTERY, parser.nextDouble() / 100.0);
         }
 
         position.set(Position.PREFIX_ADC + 1, parser.next());
@@ -523,7 +523,7 @@ public class TotemProtocolDecoder extends BaseProtocolDecoder {
         position.set(Position.KEY_ODOMETER, parser.nextLong());
         position.set(Position.KEY_FUEL_USED, parser.nextInt());
         position.set(Position.KEY_FUEL_CONSUMPTION, parser.nextInt());
-        position.set(Position.KEY_POWER, parser.nextInt() * 0.001);
+        position.set(Position.KEY_POWER, parser.nextInt() / 1000.0);
         position.set(Position.KEY_RPM, parser.nextInt());
         position.set(Position.KEY_OBD_SPEED, parser.nextInt());
         parser.nextInt(); // intake flow

@@ -201,7 +201,7 @@ public class XirgoProtocolDecoder extends BaseProtocolDecoder {
                     if (values[i].contains(".")) {
                         position.setCourse(Double.parseDouble(values[i]));
                     } else {
-                        position.setCourse(Integer.parseInt(values[i]) * 0.1);
+                        position.setCourse(Integer.parseInt(values[i]) / 10.0);
                     }
                 }
                 case "SV" -> position.set(Position.KEY_SATELLITES, Integer.parseInt(values[i]));

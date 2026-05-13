@@ -68,7 +68,7 @@ public class H02ProtocolDecoder extends BaseProtocolDecoder {
             length = 5;
         }
 
-        result = result * 10 + BcdUtil.readInteger(buf, length) * 0.0001;
+        result = result * 10 + BcdUtil.readInteger(buf, length) / 10000.0;
 
         result /= 60;
         result += degrees;

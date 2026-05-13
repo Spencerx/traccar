@@ -122,7 +122,7 @@ public class B2316ProtocolDecoder extends BaseProtocolDecoder {
             if (item.containsKey("te")) {
                 String[] temperatures = item.getString("te").split(",");
                 for (int j = 0; j < temperatures.length; j++) {
-                    position.set(Position.PREFIX_TEMP + (j + 1), Integer.parseInt(temperatures[j]) * 0.1);
+                    position.set(Position.PREFIX_TEMP + (j + 1), Integer.parseInt(temperatures[j]) / 10.0);
                 }
             }
             if (item.containsKey("st")) {

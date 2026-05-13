@@ -210,9 +210,9 @@ public class StarLinkProtocolDecoder extends BaseProtocolDecoder {
                     StarLinkMessage.mEventReport_TDx message =
                             StarLinkMessage.mEventReport_TDx.parseFrom(DataConverter.parseBase64(data[i]));
                     position.set("sensor" + message.getSensorNumber() + "Id", message.getSensorID());
-                    position.set("sensor" + message.getSensorNumber() + "Temp", message.getTemperature() * 0.1);
-                    position.set("sensor" + message.getSensorNumber() + "Humidity", message.getTemperature() * 0.1);
-                    position.set("sensor" + message.getSensorNumber() + "Voltage", message.getVoltage() * 0.001);
+                    position.set("sensor" + message.getSensorNumber() + "Temp", message.getTemperature() / 10.0);
+                    position.set("sensor" + message.getSensorNumber() + "Humidity", message.getTemperature() / 10.0);
+                    position.set("sensor" + message.getSensorNumber() + "Voltage", message.getVoltage() / 1000.0);
                 }
             }
         }

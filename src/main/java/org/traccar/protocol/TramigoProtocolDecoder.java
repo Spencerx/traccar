@@ -103,8 +103,8 @@ public class TramigoProtocolDecoder extends BaseProtocolDecoder {
             buf.readUnsignedShortLE(); // state flag
 
             position.setValid(true);
-            position.setLatitude(buf.readUnsignedIntLE() * 0.0000001);
-            position.setLongitude(buf.readUnsignedIntLE() * 0.0000001);
+            position.setLatitude(buf.readUnsignedIntLE() / 10000000.0);
+            position.setLongitude(buf.readUnsignedIntLE() / 10000000.0);
 
             position.set(Position.KEY_RSSI, buf.readUnsignedShortLE());
             position.set(Position.KEY_SATELLITES, buf.readUnsignedShortLE());
@@ -184,8 +184,8 @@ public class TramigoProtocolDecoder extends BaseProtocolDecoder {
                     position.set(Position.KEY_STATUS, status);
 
                     position.setValid(true);
-                    position.setLatitude(buf.readIntLE() * 0.00001);
-                    position.setLongitude(buf.readIntLE() * 0.00001);
+                    position.setLatitude(buf.readIntLE() / 100000.0);
+                    position.setLongitude(buf.readIntLE() / 100000.0);
                     position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedShortLE()));
                     position.setCourse(buf.readUnsignedShortLE());
 
@@ -193,8 +193,8 @@ public class TramigoProtocolDecoder extends BaseProtocolDecoder {
                     position.set(Position.KEY_GPS, buf.readUnsignedByte());
                     position.set(Position.KEY_BATTERY_LEVEL, buf.readUnsignedByte());
                     position.set(Position.KEY_ODOMETER_TRIP, buf.readUnsignedShortLE());
-                    position.set("maxAcceleration", buf.readUnsignedShortLE() * 0.001);
-                    position.set("maxDeceleration", buf.readUnsignedShortLE() * 0.001);
+                    position.set("maxAcceleration", buf.readUnsignedShortLE() / 1000.0);
+                    position.set("maxDeceleration", buf.readUnsignedShortLE() / 1000.0);
                     buf.readUnsignedShortLE(); // bearing to landmark
                     buf.readUnsignedIntLE(); // distance to landmark
 

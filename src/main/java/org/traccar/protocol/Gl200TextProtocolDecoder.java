@@ -149,7 +149,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         if (adcString.startsWith("F")) {
             position.set("fuel" + index, Integer.parseInt(adcString.substring(1)));
         } else {
-            position.set(Position.PREFIX_ADC + index, Integer.parseInt(adcString) * 0.001);
+            position.set(Position.PREFIX_ADC + index, Integer.parseInt(adcString) / 1000.0);
         }
     }
 
@@ -663,7 +663,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             index += 1; // tachograph direction
         }
         if (BitUtil.check(reportMaskExt, 7) && !v[index++].isEmpty()) {
-            position.set(Position.PREFIX_ADC + 1, Integer.parseInt(v[index - 1]) * 0.001);
+            position.set(Position.PREFIX_ADC + 1, Integer.parseInt(v[index - 1]) / 1000.0);
         }
         if (BitUtil.check(reportMaskExt, 8)) {
             index += 1; // pedal breaking factor
@@ -882,14 +882,14 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         skipLocation(parser);
 
         if (power != null && power > 10) {
-            position.set(Position.KEY_POWER, power * 0.001); // only on some devices
+            position.set(Position.KEY_POWER, power / 1000.0); // only on some devices
         }
         if (battery != null) {
             position.set(Position.KEY_BATTERY_LEVEL, battery);
         }
 
         if (parser.hasNext()) {
-            position.set(Position.KEY_BATTERY, parser.nextInt() * 0.001);
+            position.set(Position.KEY_BATTERY, parser.nextInt() / 1000.0);
         }
         position.set(Position.KEY_BATTERY_LEVEL, parser.nextInt());
         position.set(Position.PREFIX_TEMP + 1, parser.nextDouble());
@@ -943,7 +943,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         String model = getDeviceModel(deviceSession, protocolVersion);
         index += 1; // device name
         long mask = Long.parseLong(v[index++], 16);
-        Double power = v[index++].isEmpty() ? null : Integer.parseInt(v[index - 1]) * 0.001;
+        Double power = v[index++].isEmpty() ? null : Integer.parseInt(v[index - 1]) / 1000.0;
         index += 1; // report type
 
         int count = Integer.parseInt(v[index++]);
@@ -1448,7 +1448,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             position.set("accessoryStatus", Integer.parseInt(values[index++]));
         }
         if (BitUtil.check(mask, 3)) {
-            position.set("accessoryVoltage", Integer.parseInt(values[index++]) * 0.001);
+            position.set("accessoryVoltage", Integer.parseInt(values[index++]) / 1000.0);
         }
         if (BitUtil.check(mask, 4)) {
             position.set("accessoryTemp", Integer.parseInt(values[index++]));
@@ -1496,7 +1496,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             position.set("accessoryMac", values[index++]);
         }
         if (BitUtil.check(mask, 3)) {
-            position.set("accessoryVoltage", Integer.parseInt(values[index]) * 0.001);
+            position.set("accessoryVoltage", Integer.parseInt(values[index]) / 1000.0);
         }
 
         decodeLocation(position, parser);

@@ -97,7 +97,7 @@ public class SnapperProtocolDecoder extends BaseProtocolDecoder {
             int type = buf.readUnsignedByte();
             switch (type) {
                 case 0x00 -> {
-                    position.set(Position.KEY_POWER, buf.readUnsignedByte() * 0.1);
+                    position.set(Position.KEY_POWER, buf.readUnsignedByte() / 10.0);
                     position.set(Position.KEY_DEVICE_TEMP, buf.readByte());
                     position.set(Position.KEY_RSSI, buf.readUnsignedByte());
                 }

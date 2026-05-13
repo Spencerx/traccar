@@ -197,8 +197,8 @@ public class TaipProtocolDecoder extends BaseProtocolDecoder {
 
         if (parser.hasNext(7)) {
             position.set(Position.KEY_ODOMETER, parser.nextInt());
-            position.set(Position.KEY_POWER, parser.nextInt() * 0.01);
-            position.set(Position.KEY_BATTERY, parser.nextInt() * 0.01);
+            position.set(Position.KEY_POWER, parser.nextInt() / 100.0);
+            position.set(Position.KEY_BATTERY, parser.nextInt() / 100.0);
             position.set(Position.KEY_RPM, parser.nextInt());
             position.set(Position.PREFIX_TEMP + 1, parser.nextDouble());
             position.set(Position.PREFIX_TEMP + 2, parser.nextDouble());
@@ -222,8 +222,8 @@ public class TaipProtocolDecoder extends BaseProtocolDecoder {
             position.set(Position.KEY_RSSI, parser.nextInt());
         }
         if (parser.hasNext(2)) {
-            position.set(Position.PREFIX_TEMP + 1, parser.nextInt() * 0.01);
-            position.set(Position.PREFIX_TEMP + 2, parser.nextInt() * 0.01);
+            position.set(Position.PREFIX_TEMP + 1, parser.nextInt() / 100.0);
+            position.set(Position.PREFIX_TEMP + 2, parser.nextInt() / 100.0);
         }
 
         position.setValid(valid == null || valid);
@@ -284,7 +284,7 @@ public class TaipProtocolDecoder extends BaseProtocolDecoder {
                         case "ix" -> position.set(Position.PREFIX_IO + 1, value);
                         case "ad" -> position.set(Position.PREFIX_ADC + 1, Integer.parseInt(value));
                         case "sv" -> position.set(Position.KEY_SATELLITES, Integer.parseInt(value));
-                        case "bl" -> position.set(Position.KEY_BATTERY, Integer.parseInt(value) * 0.001);
+                        case "bl" -> position.set(Position.KEY_BATTERY, Integer.parseInt(value) / 1000.0);
                         case "vo" -> position.set(Position.KEY_ODOMETER, Long.parseLong(value));
                         default -> position.set(key, value);
                     }
