@@ -51,7 +51,6 @@ import org.traccar.storage.query.Request;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
