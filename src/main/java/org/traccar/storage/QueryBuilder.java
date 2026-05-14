@@ -26,6 +26,7 @@ import org.traccar.model.Permission;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -246,6 +247,13 @@ public final class QueryBuilder implements AutoCloseable {
                 }
             }
 
+            final Constructor<T> constructor;
+            try {
+                constructor = clazz.getDeclaredConstructor();
+            } catch (NoSuchMethodException e) {
+                throw new IllegalStateException(e);
+            }
+
             final ResultSet retainedResultSet = resultSet;
             return StreamSupport.stream(
                     new Spliterators.AbstractSpliterator<T>(Long.MAX_VALUE, Spliterator.ORDERED) {
@@ -253,7 +261,7 @@ public final class QueryBuilder implements AutoCloseable {
                         public boolean tryAdvance(Consumer<? super T> action) {
                             try {
                                 if (retainedResultSet.next()) {
-                                    T object = clazz.getDeclaredConstructor().newInstance();
+                                    T object = constructor.newInstance();
                                     for (ResultSetProcessor<T> processor : processors) {
                                         try {
                                             processor.process(object, retainedResultSet);
