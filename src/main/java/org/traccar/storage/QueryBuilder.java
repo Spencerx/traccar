@@ -273,8 +273,11 @@ public final class QueryBuilder implements AutoCloseable {
                     }, false)
                     .onClose(() -> {
                         try {
-                            retainedResultSet.close();
-                            close();
+                            try {
+                                retainedResultSet.close();
+                            } finally {
+                                close();
+                            }
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
                         }
@@ -297,13 +300,9 @@ public final class QueryBuilder implements AutoCloseable {
     @Override
     public void close() throws SQLException {
         try {
-            if (statement != null) {
-                statement.close();
-            }
+            statement.close();
         } finally {
-            if (connection != null) {
-                connection.close();
-            }
+            connection.close();
         }
     }
 
