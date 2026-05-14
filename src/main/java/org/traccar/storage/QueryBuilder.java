@@ -38,8 +38,11 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
@@ -187,29 +190,29 @@ public final class QueryBuilder implements AutoCloseable {
 
     private <T> void addProcessors(
             List<ResultSetProcessor<T>> processors,
-            final Class<?> parameterType, final Method method, final String name) {
+            final Class<?> parameterType, final Method method, final int columnIndex) {
         if (parameterType.equals(boolean.class)) {
-            processors.add((object, resultSet) -> method.invoke(object, resultSet.getBoolean(name)));
+            processors.add((object, resultSet) -> method.invoke(object, resultSet.getBoolean(columnIndex)));
         } else if (parameterType.equals(int.class)) {
-            processors.add((object, resultSet) -> method.invoke(object, resultSet.getInt(name)));
+            processors.add((object, resultSet) -> method.invoke(object, resultSet.getInt(columnIndex)));
         } else if (parameterType.equals(long.class)) {
-            processors.add((object, resultSet) -> method.invoke(object, resultSet.getLong(name)));
+            processors.add((object, resultSet) -> method.invoke(object, resultSet.getLong(columnIndex)));
         } else if (parameterType.equals(double.class)) {
-            processors.add((object, resultSet) -> method.invoke(object, resultSet.getDouble(name)));
+            processors.add((object, resultSet) -> method.invoke(object, resultSet.getDouble(columnIndex)));
         } else if (parameterType.equals(String.class)) {
-            processors.add((object, resultSet) -> method.invoke(object, resultSet.getString(name)));
+            processors.add((object, resultSet) -> method.invoke(object, resultSet.getString(columnIndex)));
         } else if (parameterType.equals(Date.class)) {
             processors.add((object, resultSet) -> {
-                Timestamp timestamp = resultSet.getTimestamp(name);
+                Timestamp timestamp = resultSet.getTimestamp(columnIndex);
                 if (timestamp != null) {
                     method.invoke(object, new Date(timestamp.getTime()));
                 }
             });
         } else if (parameterType.equals(byte[].class)) {
-            processors.add((object, resultSet) -> method.invoke(object, (Object) resultSet.getBytes(name)));
+            processors.add((object, resultSet) -> method.invoke(object, (Object) resultSet.getBytes(columnIndex)));
         } else {
             processors.add((object, resultSet) -> {
-                String value = resultSet.getString(name);
+                String value = resultSet.getString(columnIndex);
                 if (value != null && !value.isEmpty()) {
                     method.invoke(object, objectMapper.readValue(value, parameterType));
                 }
@@ -231,19 +234,17 @@ public final class QueryBuilder implements AutoCloseable {
             resultSet = statement.executeQuery();
             ResultSetMetaData resultMetaData = resultSet.getMetaData();
 
+            Map<String, Integer> columnIndexes = new HashMap<>();
+            for (int i = 1; i <= resultMetaData.getColumnCount(); i++) {
+                columnIndexes.put(resultMetaData.getColumnLabel(i).toLowerCase(Locale.ROOT), i);
+            }
+
             List<ResultSetProcessor<T>> processors = new ArrayList<>();
             for (var entry : ReflectionCache.getProperties(clazz, "set").entrySet()) {
-                final String name = entry.getKey();
-                boolean column = false;
-                for (int i = 1; i <= resultMetaData.getColumnCount(); i++) {
-                    if (name.equalsIgnoreCase(resultMetaData.getColumnLabel(i))) {
-                        column = true;
-                        break;
-                    }
-                }
-                if (column) {
+                Integer columnIndex = columnIndexes.get(entry.getKey().toLowerCase(Locale.ROOT));
+                if (columnIndex != null) {
                     Method method = entry.getValue().method();
-                    addProcessors(processors, method.getParameterTypes()[0], method, name);
+                    addProcessors(processors, method.getParameterTypes()[0], method, columnIndex);
                 }
             }
 
