@@ -222,12 +222,6 @@ public final class QueryBuilder implements AutoCloseable {
         }
     }
 
-    public <T> List<T> executeQuery(Class<T> clazz) throws SQLException {
-        try (var stream = executeQueryStreamed(clazz)) {
-            return stream.toList();
-        }
-    }
-
     public <T> Stream<T> executeQueryStreamed(Class<T> clazz) throws SQLException {
         ResultSet resultSet = null;
         try {
