@@ -504,6 +504,14 @@ public final class Keys {
             true);
 
     /**
+     * Generate device connection status events (deviceOnline, deviceOffline, deviceUnknown) on status changes.
+     */
+    public static final ConfigKey<Boolean> EVENT_STATUS_ENABLE = new BooleanConfigKey(
+            "event.status.enable",
+            List.of(KeyType.CONFIG),
+            false);
+
+    /**
      * If the speed is above specified value, the object is considered to be in motion. Default value is 0.01 knots.
      */
     public static final ConfigKey<Double> EVENT_MOTION_SPEED_THRESHOLD = new DoubleConfigKey(

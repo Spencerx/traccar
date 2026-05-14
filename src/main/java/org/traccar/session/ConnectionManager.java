@@ -64,6 +64,7 @@ public class ConnectionManager implements BroadcastInterface {
 
     private final long deviceTimeout;
     private final boolean showUnknownDevices;
+    private final boolean statusEventsEnabled;
 
     private final Map<Long, DeviceSession> sessionsByDeviceId = new ConcurrentHashMap<>();
     private final Map<ConnectionKey, Map<String, DeviceSession>> sessionsByEndpoint = new ConcurrentHashMap<>();
@@ -97,6 +98,7 @@ public class ConnectionManager implements BroadcastInterface {
         this.deviceLookupService = deviceLookupService;
         deviceTimeout = config.getLong(Keys.STATUS_TIMEOUT);
         showUnknownDevices = config.getBoolean(Keys.WEB_SHOW_UNKNOWN_DEVICES);
+        statusEventsEnabled = config.getBoolean(Keys.EVENT_STATUS_ENABLE);
         broadcastService.registerListener(this);
     }
 
@@ -238,16 +240,13 @@ public class ConnectionManager implements BroadcastInterface {
         String oldStatus = device.getStatus();
         device.setStatus(status);
 
-        if (!status.equals(oldStatus)) {
-            String eventType;
-            Map<Event, Position> events = new HashMap<>();
-            eventType = switch (status) {
+        if (!status.equals(oldStatus) && statusEventsEnabled) {
+            String eventType = switch (status) {
                 case Device.STATUS_ONLINE -> Event.TYPE_DEVICE_ONLINE;
                 case Device.STATUS_UNKNOWN -> Event.TYPE_DEVICE_UNKNOWN;
                 default -> Event.TYPE_DEVICE_OFFLINE;
             };
-            events.put(new Event(eventType, deviceId), null);
-            notificationManager.updateEvents(events);
+            notificationManager.updateEvents(Collections.singletonMap(new Event(eventType, deviceId), null));
         }
 
         if (time != null) {
