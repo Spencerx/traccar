@@ -94,20 +94,47 @@ public class DatabaseStorage extends Storage {
     @Override
     public <T> long addObject(T entity, Request request) throws StorageException {
         List<String> columns = request.getColumns().getColumns(entity.getClass(), "get");
-        StringBuilder query = new StringBuilder("INSERT INTO ");
-        query.append(getStorageName(entity.getClass()));
-        query.append("(");
-        query.append(formatColumns(columns, c -> c));
-        query.append(") VALUES (");
-        query.append(formatColumns(columns, c -> "?"));
-        query.append(")");
         try {
-            QueryBuilder builder = QueryBuilder.create(config, dataSource, objectMapper, query.toString(), true);
+            QueryBuilder builder = QueryBuilder.create(
+                    config, dataSource, objectMapper, formatInsert(entity.getClass(), columns), true);
             builder.setObject(entity, columns);
             return builder.executeUpdate();
         } catch (SQLException e) {
             throw new StorageException(e);
         }
+    }
+
+    @Override
+    public <T> List<Long> addObjects(List<T> entities, Request request) throws StorageException {
+        Class<?> entityClass = entities.get(0).getClass();
+        List<String> columns = request.getColumns().getColumns(entityClass, "get");
+        try {
+            QueryBuilder builder = QueryBuilder.create(
+                    config, dataSource, objectMapper, formatInsert(entityClass, columns), true);
+            for (T entity : entities) {
+                builder.setObject(entity, columns);
+                builder.addBatch();
+            }
+            List<Long> ids = builder.executeBatch();
+            if (ids.size() != entities.size()) {
+                throw new StorageException(
+                        "Generated key count " + ids.size() + " does not match batch size " + entities.size());
+            }
+            return ids;
+        } catch (SQLException e) {
+            throw new StorageException(e);
+        }
+    }
+
+    private String formatInsert(Class<?> entityClass, List<String> columns) throws StorageException {
+        StringBuilder query = new StringBuilder("INSERT INTO ");
+        query.append(getStorageName(entityClass));
+        query.append("(");
+        query.append(formatColumns(columns, c -> c));
+        query.append(") VALUES (");
+        query.append(formatColumns(columns, c -> "?"));
+        query.append(")");
+        return query.toString();
     }
 
     @Override

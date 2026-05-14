@@ -349,6 +349,29 @@ public final class QueryBuilder {
         return 0;
     }
 
+    public QueryBuilder addBatch() throws SQLException {
+        return setValue(statement::addBatch);
+    }
+
+    public List<Long> executeBatch() throws SQLException {
+        try {
+            logQuery();
+            statement.executeBatch();
+            List<Long> ids = new ArrayList<>();
+            if (returnGeneratedKeys) {
+                try (ResultSet resultSet = statement.getGeneratedKeys()) {
+                    while (resultSet.next()) {
+                        ids.add(resultSet.getLong(1));
+                    }
+                }
+            }
+            return ids;
+        } finally {
+            statement.close();
+            connection.close();
+        }
+    }
+
     public List<Permission> executePermissionsQuery() throws SQLException {
         List<Permission> result = new LinkedList<>();
         if (query != null) {
