@@ -51,6 +51,7 @@ import org.traccar.storage.query.Request;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -183,16 +184,15 @@ public class CacheManager implements BroadcastInterface {
             if (config.getBoolean(Keys.REPORT_TRIP_NEW_LOGIC)) {
                 long minDuration = AttributeUtil.lookup(
                         this, Keys.REPORT_TRIP_MIN_DURATION, key) * 1000;
-                while (positions.size() > 1) {
-                    var iterator = positions.iterator();
-                    iterator.next();
-                    Position second = iterator.next();
-                    Position last = positions.peekLast();
-                    if (last.getFixTime().getTime() - second.getFixTime().getTime() >= minDuration) {
-                        positions.poll();
-                    } else {
-                        break;
-                    }
+                long lastTime = position.getFixTime().getTime();
+                var iterator = positions.iterator();
+                iterator.next();
+                int toPrune = 0;
+                while (iterator.hasNext() && lastTime - iterator.next().getFixTime().getTime() >= minDuration) {
+                    toPrune += 1;
+                }
+                while (toPrune-- > 0) {
+                    positions.poll();
                 }
             } else {
                 while (positions.size() > 1) {
