@@ -240,20 +240,15 @@ public final class QueryBuilder implements AutoCloseable {
             }
 
             List<ResultSetProcessor<T>> processors = new ArrayList<>();
-            for (var entry : ReflectionCache.getProperties(clazz, "set").entrySet()) {
-                Integer columnIndex = columnIndexes.get(entry.getKey().toLowerCase(Locale.ROOT));
+            for (var property : ReflectionCache.getProperties(clazz, "set").values()) {
+                Integer columnIndex = columnIndexes.get(property.lowerCaseName());
                 if (columnIndex != null) {
-                    Method method = entry.getValue().method();
+                    Method method = property.method();
                     addProcessors(processors, method.getParameterTypes()[0], method, columnIndex);
                 }
             }
 
-            final Constructor<T> constructor;
-            try {
-                constructor = clazz.getDeclaredConstructor();
-            } catch (NoSuchMethodException e) {
-                throw new IllegalStateException(e);
-            }
+            final Constructor<T> constructor = ReflectionCache.getConstructor(clazz);
 
             final ResultSet retainedResultSet = resultSet;
             return StreamSupport.stream(
