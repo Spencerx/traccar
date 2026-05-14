@@ -15,7 +15,6 @@
  */
 package org.traccar.storage;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +24,8 @@ import org.traccar.helper.ReflectionCache;
 import org.traccar.model.Permission;
 
 import javax.sql.DataSource;
-import java.io.IOException;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -160,61 +158,75 @@ public final class QueryBuilder implements AutoCloseable {
         try {
             for (int index = 0; index < columns.size(); index++) {
                 String column = columns.get(index);
-                Method method = ReflectionCache.getProperties(object.getClass(), "get").get(column).method();
-                if (method.getReturnType().equals(boolean.class)) {
-                    setBoolean(index, (Boolean) method.invoke(object));
-                } else if (method.getReturnType().equals(int.class)) {
-                    setInteger(index, (Integer) method.invoke(object));
-                } else if (method.getReturnType().equals(long.class)) {
-                    setLong(index, (Long) method.invoke(object), column.endsWith("Id"));
-                } else if (method.getReturnType().equals(double.class)) {
-                    setDouble(index, (Double) method.invoke(object));
-                } else if (method.getReturnType().equals(String.class)) {
-                    setString(index, (String) method.invoke(object));
-                } else if (method.getReturnType().equals(Date.class)) {
-                    setDate(index, (Date) method.invoke(object));
-                } else if (method.getReturnType().equals(byte[].class)) {
-                    setBlob(index, (byte[]) method.invoke(object));
+                var property = ReflectionCache.getProperties(object.getClass(), "get").get(column);
+                Class<?> returnType = property.type();
+                Object value = property.handle().invokeExact(object);
+                if (returnType.equals(boolean.class)) {
+                    setBoolean(index, (Boolean) value);
+                } else if (returnType.equals(int.class)) {
+                    setInteger(index, (Integer) value);
+                } else if (returnType.equals(long.class)) {
+                    setLong(index, (Long) value, column.endsWith("Id"));
+                } else if (returnType.equals(double.class)) {
+                    setDouble(index, (Double) value);
+                } else if (returnType.equals(String.class)) {
+                    setString(index, (String) value);
+                } else if (returnType.equals(Date.class)) {
+                    setDate(index, (Date) value);
+                } else if (returnType.equals(byte[].class)) {
+                    setBlob(index, (byte[]) value);
                 } else {
-                    setString(index, objectMapper.writeValueAsString(method.invoke(object)));
+                    setString(index, objectMapper.writeValueAsString(value));
                 }
             }
-        } catch (ReflectiveOperationException | JsonProcessingException e) {
+        } catch (Throwable e) {
             LOGGER.warn("Set object error", e);
         }
     }
 
     private interface ResultSetProcessor<T> {
-        void process(T object, ResultSet resultSet) throws ReflectiveOperationException, IOException, SQLException;
+        void process(T object, ResultSet resultSet) throws Throwable;
     }
 
     private <T> void addProcessors(
             List<ResultSetProcessor<T>> processors,
-            final Class<?> parameterType, final Method method, final int columnIndex) {
+            final Class<?> parameterType, final MethodHandle handle, final int columnIndex) {
         if (parameterType.equals(boolean.class)) {
-            processors.add((object, resultSet) -> method.invoke(object, resultSet.getBoolean(columnIndex)));
+            processors.add((object, resultSet) -> {
+                handle.invokeExact(object, (Object) resultSet.getBoolean(columnIndex));
+            });
         } else if (parameterType.equals(int.class)) {
-            processors.add((object, resultSet) -> method.invoke(object, resultSet.getInt(columnIndex)));
+            processors.add((object, resultSet) -> {
+                handle.invokeExact(object, (Object) resultSet.getInt(columnIndex));
+            });
         } else if (parameterType.equals(long.class)) {
-            processors.add((object, resultSet) -> method.invoke(object, resultSet.getLong(columnIndex)));
+            processors.add((object, resultSet) -> {
+                handle.invokeExact(object, (Object) resultSet.getLong(columnIndex));
+            });
         } else if (parameterType.equals(double.class)) {
-            processors.add((object, resultSet) -> method.invoke(object, resultSet.getDouble(columnIndex)));
+            processors.add((object, resultSet) -> {
+                handle.invokeExact(object, (Object) resultSet.getDouble(columnIndex));
+            });
         } else if (parameterType.equals(String.class)) {
-            processors.add((object, resultSet) -> method.invoke(object, resultSet.getString(columnIndex)));
+            processors.add((object, resultSet) -> {
+                handle.invokeExact(object, (Object) resultSet.getString(columnIndex));
+            });
         } else if (parameterType.equals(Date.class)) {
             processors.add((object, resultSet) -> {
                 Timestamp timestamp = resultSet.getTimestamp(columnIndex);
                 if (timestamp != null) {
-                    method.invoke(object, new Date(timestamp.getTime()));
+                    handle.invokeExact(object, (Object) new Date(timestamp.getTime()));
                 }
             });
         } else if (parameterType.equals(byte[].class)) {
-            processors.add((object, resultSet) -> method.invoke(object, (Object) resultSet.getBytes(columnIndex)));
+            processors.add((object, resultSet) -> {
+                handle.invokeExact(object, (Object) resultSet.getBytes(columnIndex));
+            });
         } else {
             processors.add((object, resultSet) -> {
                 String value = resultSet.getString(columnIndex);
                 if (value != null && !value.isEmpty()) {
-                    method.invoke(object, objectMapper.readValue(value, parameterType));
+                    handle.invokeExact(object, (Object) objectMapper.readValue(value, parameterType));
                 }
             });
         }
@@ -243,8 +255,7 @@ public final class QueryBuilder implements AutoCloseable {
             for (var property : ReflectionCache.getProperties(clazz, "set").values()) {
                 Integer columnIndex = columnIndexes.get(property.lowerCaseName());
                 if (columnIndex != null) {
-                    Method method = property.method();
-                    addProcessors(processors, method.getParameterTypes()[0], method, columnIndex);
+                    addProcessors(processors, property.type(), property.handle(), columnIndex);
                 }
             }
 
@@ -261,7 +272,7 @@ public final class QueryBuilder implements AutoCloseable {
                                     for (ResultSetProcessor<T> processor : processors) {
                                         try {
                                             processor.process(object, retainedResultSet);
-                                        } catch (ReflectiveOperationException | IOException error) {
+                                        } catch (Throwable error) {
                                             LOGGER.warn("Set property error", error);
                                         }
                                     }

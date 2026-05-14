@@ -23,7 +23,7 @@ import org.traccar.model.Server;
 import org.traccar.storage.query.Condition;
 import org.traccar.storage.query.Request;
 
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -117,10 +117,10 @@ public class MemoryStorage extends Storage {
     }
 
     private Object retrieveValue(Object object, String key) {
+        MethodHandle handle = ReflectionCache.getProperties(object.getClass(), "get").get(key).handle();
         try {
-            Method method = ReflectionCache.getProperties(object.getClass(), "get").get(key).method();
-            return method.invoke(object);
-        } catch (ReflectiveOperationException e) {
+            return handle.invokeExact(object);
+        } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }
@@ -144,13 +144,14 @@ public class MemoryStorage extends Storage {
         var getters = ReflectionCache.getProperties(entity.getClass(), "get");
         var setters = ReflectionCache.getProperties(entity.getClass(), "set");
         for (String column : request.getColumns().getColumns(entity.getClass(), "get")) {
+            MethodHandle setter = setters.get(column).handle();
+            MethodHandle getter = getters.get(column).handle();
             try {
-                Method setter = setters.get(column).method();
-                Object value = getters.get(column).method().invoke(entity);
+                Object value = getter.invokeExact(entity);
                 for (Object object : items) {
-                    setter.invoke(object, value);
+                    setter.invokeExact(object, value);
                 }
-            } catch (ReflectiveOperationException e) {
+            } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
         }

@@ -33,8 +33,7 @@ import org.traccar.model.Device;
 import org.traccar.model.Position;
 import org.traccar.session.cache.CacheManager;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -96,26 +95,27 @@ public class ComputedAttributesProvider {
             }
         }
         Position last = includeLastAttributes ? cacheManager.getPosition(position.getDeviceId()) : null;
-        ReflectionCache.getProperties(Position.class, "get").forEach((key, value) -> {
-            Method method = value.method();
-            String name = Character.toLowerCase(method.getName().charAt(3)) + method.getName().substring(4);
+        ReflectionCache.getProperties(Position.class, "get").forEach((name, property) -> {
+            MethodHandle handle = property.handle();
             try {
-                if (!method.getReturnType().equals(Map.class)) {
-                    result.set(name, method.invoke(position));
+                Object positionValue = handle.invokeExact((Object) position);
+                Object lastValue = last != null ? handle.invokeExact((Object) last) : null;
+                if (!property.type().equals(Map.class)) {
+                    result.set(name, positionValue);
                     if (last != null) {
-                        result.set(prefixAttribute("last", name), method.invoke(last));
+                        result.set(prefixAttribute("last", name), lastValue);
                     }
                 } else {
-                    for (Map.Entry<?, ?> entry : ((Map<?, ?>) method.invoke(position)).entrySet()) {
+                    for (Map.Entry<?, ?> entry : ((Map<?, ?>) positionValue).entrySet()) {
                         result.set((String) entry.getKey(), entry.getValue());
                     }
                     if (last != null) {
-                        for (Map.Entry<?, ?> entry : ((Map<?, ?>) method.invoke(last)).entrySet()) {
+                        for (Map.Entry<?, ?> entry : ((Map<?, ?>) lastValue).entrySet()) {
                             result.set(prefixAttribute("last", (String) entry.getKey()), entry.getValue());
                         }
                     }
                 }
-            } catch (IllegalAccessException | InvocationTargetException error) {
+            } catch (Throwable error) {
                 LOGGER.warn("Attribute reflection error", error);
             }
         });

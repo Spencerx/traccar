@@ -18,6 +18,9 @@ package org.traccar.helper;
 import org.traccar.storage.QueryIgnore;
 
 import java.beans.Introspector;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -30,10 +33,14 @@ public final class ReflectionCache {
     private ReflectionCache() {
     }
 
+    private static final MethodHandles.Lookup LOOKUP = MethodHandles.publicLookup();
+    private static final MethodType SETTER_TYPE = MethodType.methodType(void.class, Object.class, Object.class);
+    private static final MethodType GETTER_TYPE = MethodType.methodType(Object.class, Object.class);
+
     private record Key(Class<?> clazz, String type) {
     }
 
-    public record PropertyMethod(Method method, boolean queryIgnore, String lowerCaseName) {
+    public record PropertyMethod(Class<?> type, boolean queryIgnore, String lowerCaseName, MethodHandle handle) {
     }
 
     private static final Map<Key, Map<String, PropertyMethod>> CACHE = new ConcurrentHashMap<>();
@@ -48,9 +55,17 @@ public final class ReflectionCache {
                 if (method.getName().startsWith(key.type()) && parameters.length == parameterCount
                         && !method.getName().equals("getClass")) {
                     String name = Introspector.decapitalize(method.getName().substring(3));
+                    MethodHandle handle;
+                    try {
+                        handle = LOOKUP.unreflect(method)
+                                .asType(parameterCount == 1 ? SETTER_TYPE : GETTER_TYPE);
+                    } catch (IllegalAccessException e) {
+                        throw new IllegalStateException(e);
+                    }
+                    Class<?> propertyType = parameterCount == 1 ? parameters[0] : method.getReturnType();
                     properties.put(name, new PropertyMethod(
-                            method, method.isAnnotationPresent(QueryIgnore.class),
-                            name.toLowerCase(Locale.ROOT)));
+                            propertyType, method.isAnnotationPresent(QueryIgnore.class),
+                            name.toLowerCase(Locale.ROOT), handle));
                 }
             }
             return properties;
