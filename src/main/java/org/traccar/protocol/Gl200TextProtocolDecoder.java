@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 - 2025 Anton Tananaev (anton@traccar.org)
+ * Copyright 2012 - 2026 Anton Tananaev (anton@traccar.org)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -827,6 +827,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             .number("(d{5}:dd:dd)?,")            // hour meter
             .number("(x+)?,")                    // adc 1
             .number("(x+)?,")                    // adc 2
+            .number("d*,").optional()            // reserved
             .number("(d{1,3})?,")                // battery
             .number("(x{6})?,")                  // device status
             .number("(d+)?,")                    // rpm
