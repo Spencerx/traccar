@@ -359,7 +359,8 @@ public final class Keys {
      */
     public static final ConfigKey<Integer> SERVER_TIMEOUT = new IntegerConfigKey(
             "server.timeout",
-            List.of(KeyType.CONFIG));
+            List.of(KeyType.CONFIG),
+            1800);
 
     /**
      * Send device responses immediately before writing it in the database.
