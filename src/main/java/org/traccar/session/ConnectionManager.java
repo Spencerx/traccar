@@ -66,9 +66,12 @@ public class ConnectionManager implements BroadcastInterface {
     private final boolean showUnknownDevices;
     private final boolean statusEventsEnabled;
 
+    private record UnknownEntry(String uniqueId, long timestamp) {
+    }
+
     private final Map<Long, DeviceSession> sessionsByDeviceId = new ConcurrentHashMap<>();
     private final Map<ConnectionKey, Map<String, DeviceSession>> sessionsByEndpoint = new ConcurrentHashMap<>();
-    private final Map<ConnectionKey, String> unknownByEndpoint = new ConcurrentHashMap<>();
+    private final Map<ConnectionKey, UnknownEntry> unknownByEndpoint = new ConcurrentHashMap<>();
 
     private final Config config;
     private final CacheManager cacheManager;
@@ -160,7 +163,7 @@ public class ConnectionManager implements BroadcastInterface {
 
             return deviceSession;
         } else {
-            unknownByEndpoint.put(connectionKey, firstUniqueId);
+            unknownByEndpoint.put(connectionKey, new UnknownEntry(firstUniqueId, System.currentTimeMillis()));
             LOGGER.warn("Unknown device - " + String.join(" ", uniqueIds)
                     + " (" + ((InetSocketAddress) remoteAddress).getHostString() + ")");
             return null;
@@ -345,9 +348,9 @@ public class ConnectionManager implements BroadcastInterface {
     public synchronized void updateLog(LogRecord record) {
         var sessions = sessionsByEndpoint.getOrDefault(record.getConnectionKey(), Map.of());
         if (sessions.isEmpty()) {
-            String unknownUniqueId = unknownByEndpoint.get(record.getConnectionKey());
-            if (unknownUniqueId != null && showUnknownDevices) {
-                record.setUniqueId(unknownUniqueId);
+            UnknownEntry unknown = unknownByEndpoint.get(record.getConnectionKey());
+            if (unknown != null && showUnknownDevices) {
+                record.setUniqueId(unknown.uniqueId());
                 listeners.values().stream()
                         .flatMap(Set::stream)
                         .forEach((listener) -> listener.onUpdateLog(record));
