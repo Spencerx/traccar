@@ -116,7 +116,7 @@ public class DatabaseStorage extends Storage {
 
     @Override
     public <T> List<Long> addObjects(List<T> entities, Request request) throws StorageException {
-        Class<?> entityClass = entities.get(0).getClass();
+        Class<?> entityClass = entities.getFirst().getClass();
         List<String> columns = request.getColumns().getColumns(entityClass, "get");
         try (QueryBuilder builder = QueryBuilder.create(
                 config, dataSource, objectMapper, formatInsert(entityClass, columns), true)) {

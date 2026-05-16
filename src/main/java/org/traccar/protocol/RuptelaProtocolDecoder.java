@@ -208,7 +208,7 @@ public class RuptelaProtocolDecoder extends BaseProtocolDecoder {
                         if (positions.size() == 0) {
                             getLastLocation(position, null);
                         } else {
-                            position = positions.remove(positions.size() - 1);
+                            position = positions.removeLast();
                         }
                     }
                 }
