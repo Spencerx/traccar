@@ -108,7 +108,7 @@ public class PositionForwarderWialon implements PositionForwarder {
             message = uniqueId + "#D#" + payload + "\r\n";
         }
 
-        byte[] buffer = message.getBytes();
+        byte[] buffer = message.getBytes(StandardCharsets.US_ASCII);
         DatagramPacket packet;
 
         if (useCompression) {
