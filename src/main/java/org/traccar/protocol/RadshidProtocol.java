@@ -33,7 +33,7 @@ public class RadshidProtocol extends BaseProtocol {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline, Config config) {
                 pipeline.addLast(new LengthFieldBasedFrameDecoder(
-                        ByteOrder.LITTLE_ENDIAN, 4096, 0, 4, 0, 0, true));
+                        ByteOrder.LITTLE_ENDIAN, MAX_FRAME_LENGTH_LARGE, 0, 4, 0, 0, true));
                 pipeline.addLast(new RadshidProtocolDecoder(RadshidProtocol.this));
             }
         });
