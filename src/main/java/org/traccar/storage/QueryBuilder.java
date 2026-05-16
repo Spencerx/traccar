@@ -139,18 +139,14 @@ public final class QueryBuilder implements AutoCloseable {
     }
 
     public void setValue(int index, Object value) throws SQLException {
-        if (value instanceof Boolean booleanValue) {
-            setBoolean(index, booleanValue);
-        } else if (value instanceof Integer integerValue) {
-            setInteger(index, integerValue);
-        } else if (value instanceof Long longValue) {
-            setLong(index, longValue);
-        } else if (value instanceof Double doubleValue) {
-            setDouble(index, doubleValue);
-        } else if (value instanceof String stringValue) {
-            setString(index, stringValue);
-        } else if (value instanceof Date dateValue) {
-            setDate(index, dateValue);
+        switch (value) {
+            case Boolean booleanValue -> setBoolean(index, booleanValue);
+            case Integer integerValue -> setInteger(index, integerValue);
+            case Long longValue -> setLong(index, longValue);
+            case Double doubleValue -> setDouble(index, doubleValue);
+            case String stringValue -> setString(index, stringValue);
+            case Date dateValue -> setDate(index, dateValue);
+            default -> { }
         }
     }
 

@@ -253,33 +253,39 @@ public class DatabaseStorage extends Storage {
 
     private List<Object> getConditionVariables(Condition genericCondition) {
         List<Object> results = new ArrayList<>();
-        if (genericCondition instanceof Condition.Compare condition) {
-            results.add(condition.getValue());
-        } else if (genericCondition instanceof Condition.Between condition) {
-            results.add(condition.getFromValue());
-            results.add(condition.getToValue());
-        } else if (genericCondition instanceof Condition.Binary condition) {
-            results.addAll(getConditionVariables(condition.getFirst()));
-            results.addAll(getConditionVariables(condition.getSecond()));
-        } else if (genericCondition instanceof Condition.Contains condition) {
-            String value = "%" + condition.getValue().toLowerCase(Locale.ROOT) + "%";
-            results.addAll(Collections.nCopies(condition.getColumns().size(), value));
-        } else if (genericCondition instanceof Condition.Permission condition) {
-            long conditionId = condition.getOwnerId() > 0 ? condition.getOwnerId() : condition.getPropertyId();
-            results.add(conditionId);
-            if (condition.getIncludeGroups()) {
-                results.add(conditionId);
+        switch (genericCondition) {
+            case Condition.Compare condition -> results.add(condition.getValue());
+            case Condition.Between condition -> {
+                results.add(condition.getFromValue());
+                results.add(condition.getToValue());
             }
-        } else if (genericCondition instanceof Condition.LatestPositions condition) {
-            if (condition.getDeviceId() > 0) {
-                results.add(condition.getDeviceId());
-                results.add(condition.getDeviceId());
-            } else {
-                long period = config.getLong(Keys.DATABASE_POSITION_PERIOD);
-                if (period > 0) {
-                    results.add(new Date(System.currentTimeMillis() - period * 1000));
+            case Condition.Binary condition -> {
+                results.addAll(getConditionVariables(condition.getFirst()));
+                results.addAll(getConditionVariables(condition.getSecond()));
+            }
+            case Condition.Contains condition -> {
+                String value = "%" + condition.getValue().toLowerCase(Locale.ROOT) + "%";
+                results.addAll(Collections.nCopies(condition.getColumns().size(), value));
+            }
+            case Condition.Permission condition -> {
+                long conditionId = condition.getOwnerId() > 0 ? condition.getOwnerId() : condition.getPropertyId();
+                results.add(conditionId);
+                if (condition.getIncludeGroups()) {
+                    results.add(conditionId);
                 }
             }
+            case Condition.LatestPositions condition -> {
+                if (condition.getDeviceId() > 0) {
+                    results.add(condition.getDeviceId());
+                    results.add(condition.getDeviceId());
+                } else {
+                    long period = config.getLong(Keys.DATABASE_POSITION_PERIOD);
+                    if (period > 0) {
+                        results.add(new Date(System.currentTimeMillis() - period * 1000));
+                    }
+                }
+            }
+            default -> { }
         }
         return results;
     }
