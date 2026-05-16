@@ -42,7 +42,7 @@ public class ScheduleManager implements LifecycleObject {
 
     @Override
     public void start() {
-        executor = Executors.newSingleThreadScheduledExecutor();
+        executor = Executors.newScheduledThreadPool(4);
         Stream.of(
                 TaskHealthCheck.class,
                 TaskClearStatus.class,
