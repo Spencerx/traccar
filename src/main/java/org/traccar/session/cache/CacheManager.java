@@ -153,7 +153,12 @@ public class CacheManager implements BroadcastInterface {
                         var to = position.getFixTime();
                         try (var positionsStream =
                                 PositionUtil.getPositionsStreamWithExtra(storage, deviceId, from, to)) {
-                            positionsStream.forEach(positions::add);
+                            positionsStream.forEach(loaded -> {
+                                Position previous = positions.peekLast();
+                                if (previous == null || loaded.getFixTime().after(previous.getFixTime())) {
+                                    positions.add(loaded);
+                                }
+                            });
                         }
                     } else {
                         positions.add(position);
@@ -179,6 +184,10 @@ public class CacheManager implements BroadcastInterface {
     public void updatePosition(Position position) {
         deviceReferences.computeIfPresent(position.getDeviceId(), (key, oldValue) -> {
             var positions = devicePositions.computeIfAbsent(key, k -> new ConcurrentLinkedDeque<>());
+            Position previous = positions.peekLast();
+            if (previous != null && !position.getFixTime().after(previous.getFixTime())) {
+                return oldValue;
+            }
             positions.add(position);
             if (config.getBoolean(Keys.REPORT_TRIP_NEW_LOGIC)) {
                 long minDuration = AttributeUtil.lookup(
